@@ -16,6 +16,7 @@ type Props = {
   pubDatetime?: Date;
   modDatetime?: Date | null;
   scrollSmooth?: boolean;
+  lang?: string;
 };
 
 const {
@@ -28,6 +29,7 @@ const {
   pubDatetime,
   modDatetime,
   scrollSmooth = false,
+  lang = (Astro.params.lang as string) || "en",
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.url);
@@ -52,7 +54,7 @@ const structuredData = {
 <!doctype html>
 <html
   dir={SITE.dir}
-  lang=`${SITE.lang ?? "en"}`
+  lang={lang}
   class={`${scrollSmooth && "scroll-smooth"}`}
 >
   <head>
@@ -119,7 +121,7 @@ const structuredData = {
       rel="alternate"
       type="application/rss+xml"
       title={SITE.title}
-      href={new URL("rss.xml", Astro.site)}
+      href={new URL(`${lang}/rss.xml`, Astro.site)}
     />
 
     <meta name="theme-color" content="" />
