@@ -4,6 +4,8 @@
 
 [Demo](https://astropages-bilingual.pages.dev)
 
+[我的博客](https://t0saki.com)同样使用了这个模版。
+
 一个基于 [Astro v5](https://astro.build)、[Keystatic CMS](https://keystatic.com) 和 [Cloudflare Pages](https://pages.cloudflare.com) 构建的现代、高性能双语博客模版。
 
 专为追求“混合（Hybrid）”体验的工程师和内容创作者设计：面向访客使用 **SSG (静态站点生成)** 以获得极致性能，同时提供 **Headless CMS** 带来无需维护数据库的优秀写作体验。

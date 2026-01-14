@@ -4,6 +4,8 @@
 
 [Demo](https://astropages-bilingual.pages.dev)
 
+[My Blog](https://t0saki.com) also uses this template.
+
 A modern, high-performance bilingual blog template built with [Astro v5](https://astro.build), [Keystatic CMS](https://keystatic.com), and [Cloudflare Pages](https://pages.cloudflare.com).
 
 Designed for engineers and content creators who want a "Hybrid" experience: **Static Site Generation (SSG)** for extreme performance, and **Headless CMS** for a great writing experience without database maintenance.
