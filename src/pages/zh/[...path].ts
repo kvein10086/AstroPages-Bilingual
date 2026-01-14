@@ -5,6 +5,9 @@ import type { APIRoute } from "astro";
  * Handles ANY path under /zh/ including nested dynamic paths like /zh/posts/welcome
  */
 
+// SSR mode - handle any path dynamically at runtime
+export const prerender = false;
+
 export const GET: APIRoute = ({ url, redirect }) => {
   const pathAfterZh = url.pathname.replace(/^\/zh\/?/, '');
   const redirectPath = pathAfterZh ? `/${pathAfterZh}` : '/';
