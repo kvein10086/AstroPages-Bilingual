@@ -147,13 +147,37 @@ const structuredData = {
       (function() {
         const preferredLang = localStorage.getItem("preferredLang");
         const path = window.location.pathname;
-        if (!preferredLang) return;
 
-        // Only redirect on homepage to avoid 404s on deep links
-        if (preferredLang === "en" && path === "/") {
-          window.location.replace("/en/");
-        } else if (preferredLang === "zh" && (path === "/en/" || path === "/en")) {
-          window.location.replace("/");
+        // Function to handle redirection (Global)
+        function checkAndRedirect(targetLang) {
+            const currentPath = window.location.pathname;
+            const isEnglishPath = currentPath.startsWith("/en/") || currentPath === "/en";
+
+            if (targetLang === "en" && !isEnglishPath) {
+                // Redirect to English
+                // Ensure we don't double slash if path is just "/"
+                const pathSuffix = currentPath === "/" ? "/" : currentPath;
+                window.location.replace("/en" + pathSuffix.replace(/^\//, "/")); 
+            } else if (targetLang === "zh" && isEnglishPath) {
+                // Redirect to Chinese
+                const newPath = currentPath.replace(/^\/en/, "") || "/";
+                window.location.replace(newPath);
+            }
+        }
+
+        if (preferredLang) {
+          // 1. Manual Selection (Highest Priority)
+          checkAndRedirect(preferredLang);
+        } else {
+          // 2. Browser Language (Second Priority)
+          // Only check browser language if NO existing manual preference
+          const browserLang = navigator.language || navigator.userLanguage;
+          if (browserLang.startsWith("en")) {
+            checkAndRedirect("en");
+          } else if (browserLang.startsWith("zh")) {
+            checkAndRedirect("zh");
+          }
+          // 3. Keep current URL (Lowest Priority) - Implied by doing nothing
         }
       })();
     </script>
