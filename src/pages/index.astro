@@ -125,7 +125,9 @@ const homePath = getRelativeLocaleUrl(locale, "");
 </Layout>
 
 <script>
-  document.addEventListener("astro:page-load", () => {
+  import { onPageReady } from "@/scripts/onPageReady";
+
+  onPageReady(() => {
     const indexLayout = (document.querySelector("#main-content") as HTMLElement)
       ?.dataset;
     const baseRoot = import.meta.env.BASE_URL.replace(/\/?$/, "/");

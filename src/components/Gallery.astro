@@ -139,6 +139,11 @@ const pswpStrings = JSON.stringify({
     border-radius: 0.25rem;
     /* Doubles as a loading placeholder before the thumbnail paints. */
     background-color: var(--color-muted);
+    /* Skip rendering work for off-screen photos. Safe to apply per item (rather
+       than per album) because the box is sized entirely by `flex-basis` and
+       `aspect-ratio` above, never by its contents — so no `contain-intrinsic-size`
+       guess is needed and the document height stays exact while scrolling. */
+    content-visibility: auto;
   }
   .g-item img {
     display: block;
@@ -165,11 +170,19 @@ const pswpStrings = JSON.stringify({
     opacity: 0;
     transition: opacity 0.2s ease;
     pointer-events: none;
+    /* The caption/EXIF text is a hover affordance that touch devices never see
+       (see the `hover: hover` query below), yet rendering it still makes the
+       browser fetch every CJK webfont subset those captions happen to use — on
+       a full gallery page that measured 673 KB of woff2 competing with the
+       thumbnails and with the scripts that power the lightbox. Skipping the
+       contents defers that until the pointer actually arrives. */
+    content-visibility: hidden;
   }
   /* Reveal on hover only for real pointers; touch devices rely on the lightbox. */
   @media (hover: hover) and (pointer: fine) {
     .g-item:hover .g-overlay {
       opacity: 1;
+      content-visibility: visible;
     }
   }
   /* Keyboard parity: focusing an item shows its overlay + a visible outline. */
@@ -179,6 +192,7 @@ const pswpStrings = JSON.stringify({
   }
   .g-item:focus-visible .g-overlay {
     opacity: 1;
+    content-visibility: visible;
   }
   .g-caption {
     font-size: 0.75rem;
@@ -200,6 +214,7 @@ const pswpStrings = JSON.stringify({
 <script>
   import type PhotoSwipeLightbox from "photoswipe/lightbox";
   import { createViewer, parseViewerStrings } from "@/scripts/photoViewer";
+  import { onPageReady } from "@/scripts/onPageReady";
 
   let lightbox: PhotoSwipeLightbox | null = null;
 
@@ -227,6 +242,6 @@ const pswpStrings = JSON.stringify({
     lightbox.init();
   }
 
-  document.addEventListener("astro:page-load", initGallery);
+  onPageReady(initGallery);
   document.addEventListener("astro:before-swap", destroyLightbox);
 </script>

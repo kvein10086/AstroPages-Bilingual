@@ -6,6 +6,7 @@
  * data source — keep viewer behavior here so they can't drift apart.
  */
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import PhotoSwipe from "photoswipe";
 import "photoswipe/style.css";
 
 type LightboxOptions = ConstructorParameters<typeof PhotoSwipeLightbox>[0];
@@ -53,7 +54,13 @@ export function createViewer(
   captionFor?: (element: HTMLElement | undefined) => CaptionLines
 ): PhotoSwipeLightbox {
   const lightbox = new PhotoSwipeLightbox({
-    pswpModule: () => import("photoswipe"),
+    // Bundled rather than `() => import("photoswipe")`. As a dynamic import the
+    // ~15 KB (brotli) core was only requested on the first tap, where it queued
+    // behind whatever images were still streaming — on a slow link that left the
+    // lightbox unopenable for tens of seconds after the tap. It is smaller than
+    // a single thumbnail, so paying for it up front on the script's priority
+    // lane is the better trade.
+    pswpModule: PhotoSwipe,
     // Translucent near-black over a backdrop blur (`.pswp__bg` in global.css):
     // immersive, but the page glows through faintly at the edges.
     bgOpacity: 0.8,

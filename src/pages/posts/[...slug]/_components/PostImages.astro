@@ -30,6 +30,7 @@ const pswpStrings = JSON.stringify({
     createViewer,
     parseViewerStrings,
   } from "@/scripts/photoViewer";
+  import { onPageReady } from "@/scripts/onPageReady";
   import type { ArticleImageInfo } from "@/utils/getGalleryAlbums";
 
   /** Fallback slide dimensions (3:2) when an image hasn't loaded yet. */
@@ -158,6 +159,6 @@ const pswpStrings = JSON.stringify({
     });
   }
 
-  document.addEventListener("astro:page-load", initPostImages);
+  onPageReady(initPostImages);
   document.addEventListener("astro:before-swap", destroyViewer);
 </script>
