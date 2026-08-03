@@ -98,6 +98,8 @@ interface ShareLink {
   name: string;
   /** Base share URL. The post URL will be appended as a query param. */
   url: string;
+  /** Rendering style used by the source icon. Defaults to "outline". */
+  iconStyle?: "outline" | "solid";
   /**
    * Accessible label for the icon link (aria-label, title attribute).
    * Auto-generated if omitted: "Share this post on Facebook", "Share this post via WhatsApp", etc.

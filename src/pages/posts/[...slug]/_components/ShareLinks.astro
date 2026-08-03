@@ -10,13 +10,15 @@ const icons = import.meta.glob<{
   default: (_props: Record<string, unknown>) => unknown;
 }>("/src/assets/icons/socials/*.svg");
 
-const pageUrl = Astro.url;
+const pageUrl = encodeURIComponent(Astro.url.toString());
 
-const platformLabel = (name: string) =>
-  name.charAt(0).toUpperCase() + name.slice(1);
+const platformLabel = (name: string) => {
+  if (name === "qq") return "QQ";
+  return name.charAt(0).toUpperCase() + name.slice(1);
+};
 
 const items = await Promise.all(
-  shareLinks.map(async ({ name, url, linkTitle }) => {
+  shareLinks.map(async ({ name, url, iconStyle = "outline", linkTitle }) => {
     const mod = await icons[`/src/assets/icons/socials/${name}.svg`]?.();
     const Icon = mod?.default;
     const title =
@@ -24,7 +26,7 @@ const items = await Promise.all(
       (name === "mail"
         ? t.post.sharePostViaEmail
         : tplStr(t.post.sharePostOn, { platform: platformLabel(name) }));
-    return { url, title, Icon };
+    return { url, title, Icon, iconStyle };
   })
 );
 ---
@@ -34,7 +36,7 @@ const items = await Promise.all(
     <div class="flex flex-none flex-col items-center justify-center gap-1 md:items-start">
       <span class="italic">{t.post.sharePostIntro}</span>
       <div class="text-center">
-        {items.map(({ url, title, Icon }) =>
+        {items.map(({ url, title, Icon, iconStyle }) =>
           Icon ? (
             <LinkButton
               href={`${url}${pageUrl}`}
@@ -43,7 +45,13 @@ const items = await Promise.all(
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icon class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" />
+              <Icon
+                class={`inline-block size-6 scale-125 opacity-90 sm:scale-110 ${
+                  iconStyle === "solid"
+                    ? "fill-current stroke-none"
+                    : "fill-transparent stroke-current stroke-2 group-hover:fill-transparent"
+                }`}
+              />
               <span class="sr-only">{title}</span>
             </LinkButton>
           ) : null

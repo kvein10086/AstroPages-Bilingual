@@ -44,6 +44,21 @@ export default defineAstroPaperConfig({
     { name: "mail", url: "mailto:yourmail@gmail.com" },
   ],
   shareLinks: [
+    {
+      name: "weibo",
+      url: "https://service.weibo.com/share/share.php?url=",
+      iconStyle: "solid",
+    },
+    {
+      name: "qq",
+      url: "https://connect.qq.com/widget/shareqq/index.html?url=",
+      iconStyle: "solid",
+    },
+    {
+      name: "qzone",
+      url: "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=",
+      iconStyle: "solid",
+    },
     { name: "whatsapp", url: "https://wa.me/?text=" },
     { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
     { name: "x", url: "https://x.com/intent/post?url=" },
