@@ -47,6 +47,13 @@
       @apply border-border mx-auto border;
     }
 
+    /* Inline players from `![caption](…/clip.mp4)` lines — see
+       src/utils/rehype/rehypeVideoEmbed.ts. Matched to the image treatment so a
+       post mixing the two reads as one column. */
+    video {
+      @apply border-border mx-auto block h-auto max-w-full border bg-black;
+    }
+
     img[role="button"] {
       @apply cursor-zoom-in;
 

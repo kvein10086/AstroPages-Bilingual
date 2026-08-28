@@ -72,6 +72,8 @@ export default {
     lightboxPrev: "上一张",
     lightboxNext: "下一张",
     lightboxError: "图片加载失败。",
+    lightboxVideoError: "视频加载失败。",
+    playVideo: "播放视频",
   },
   notFound: {
     title: "404 未找到",

@@ -1,10 +1,16 @@
 /**
  * Gallery thumbnail + EXIF generator.
  *
- * Scans posts with `gallery: true`, collects their whitelisted image-host URLs,
- * downloads each once, extracts a privacy-safe EXIF subset (never GPS), and
- * writes an 800px AVIF thumbnail plus a manifest. The Astro build reads only the
- * manifest — it never downloads or transcodes.
+ * Scans posts with `gallery: true`, collects their whitelisted media-host URLs,
+ * downloads each once, extracts a privacy-safe EXIF subset (never GPS, never a
+ * video's location tags), and writes an 800px AVIF thumbnail plus a manifest.
+ * The Astro build reads only the manifest — it never downloads or transcodes.
+ *
+ * Videos (`.mp4`/`.webm`/`.mov`/`.m4v` URLs) are never downloaded in full and
+ * never re-encoded: ffmpeg reads the remote clip over range requests to grab a
+ * single poster frame, and the manifest records its display dimensions and
+ * duration. Publishing a clip is the author's job (see the gallery skill) —
+ * this script only makes it renderable.
  *
  * Per image:
  *   - HDR (PQ/HLG) AVIF/HEIC → ffmpeg (SVT-AV1) downscales it KEEPING the HDR
@@ -17,7 +23,8 @@
  * Usage:
  *   node scripts/generate-gallery-thumbs.mjs [--prune]
  *
- * Requires Node >= 22 (native fetch) and ffmpeg (HDR passthrough + HEIC decode).
+ * Requires Node >= 22 (native fetch) and ffmpeg (HDR passthrough, HEIC decode,
+ * video posters — the last needs an ffmpeg built with HTTPS support).
  * avifdec (libavif-bin) / ImageMagick are optional extra decoder fallbacks.
  */
 import { promises as fs } from "node:fs";
@@ -41,6 +48,16 @@ const THUMB_QUALITY = 60;
 const THUMB_HDR_CRF = 32;
 // ffprobe color_transfer values that mean the image is HDR.
 const HDR_TRANSFERS = new Set(["smpte2084", "arib-std-b67"]);
+// URL extensions collected as video. Keep in sync with VIDEO_EXTENSIONS in
+// src/utils/media.ts — the site and this generator must agree on what a video
+// is, or a clip gets an image thumbnail (or no manifest entry at all).
+const VIDEO_EXTS = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+// Poster frame timestamp. The first frame is often a fade-in or a black lead-in,
+// so seek a second in — but never past the middle of a very short clip.
+const POSTER_MAX_SEEK = 1;
+// Transient-failure retries per URL, and the first backoff (doubling after).
+const MAX_ATTEMPTS = 3;
+const RETRY_BASE_MS = 2000;
 // Present as a real browser: self-hosted image hosts (e.g. Cloudflare-fronted
 // ones) often reject non-browser User-Agents or missing Referer with a 403.
 const USER_AGENT =
@@ -56,8 +73,36 @@ function fetchHeaders(url) {
   };
 }
 
-// Keep in sync with the regex in src/utils/getGalleryAlbums.ts.
-const IMAGE_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
+/**
+ * ffmpeg/ffprobe input arguments for reading a URL directly, carrying the same
+ * browser-like headers `fetchHeaders` sends so a Cloudflare-fronted host does
+ * not 403. Range requests keep this to the bytes actually needed rather than
+ * the whole clip. MUST come before `-i`.
+ */
+function ffHttpArgs(url) {
+  return [
+    "-user_agent",
+    USER_AGENT,
+    "-headers",
+    `Referer: ${new URL(url).origin}/\r\n`,
+  ];
+}
+
+/** Is this URL a video? Matches isVideoUrl in src/utils/media.ts. */
+function isVideoUrl(url) {
+  let pathname;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    pathname = url.split(/[?#]/)[0] ?? "";
+  }
+  const dot = pathname.lastIndexOf(".");
+  return dot !== -1 && VIDEO_EXTS.has(pathname.slice(dot).toLowerCase());
+}
+
+// Keep in sync with the regex in src/utils/getGalleryAlbums.ts. Videos use the
+// same markdown image syntax and are told apart by their extension.
+const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
 
 const shouldPrune = process.argv.includes("--prune");
 
@@ -124,7 +169,7 @@ function splitFrontmatter(text) {
   return { frontmatter: match[1], body: match[2] };
 }
 
-/** Collect unique whitelisted image URLs across all `gallery: true` posts. */
+/** Collect unique whitelisted media URLs across all `gallery: true` posts. */
 async function collectUrls(domains) {
   const files = await walk(POSTS_DIR);
   const urls = new Set();
@@ -132,7 +177,7 @@ async function collectUrls(domains) {
     const text = await fs.readFile(file, "utf8");
     const { frontmatter, body } = splitFrontmatter(text);
     if (!/^gallery:\s*true\s*$/m.test(frontmatter)) continue;
-    for (const match of body.matchAll(IMAGE_RE)) {
+    for (const match of body.matchAll(MEDIA_RE)) {
       let url = match[2]?.trim() ?? "";
       if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
       if (!url) continue;
@@ -260,6 +305,18 @@ async function ffprobeInfo(file) {
   }
 }
 
+/** Preserve a source's HDR signalling so browsers render the output correctly. */
+function hdrColorArgs(info) {
+  return [
+    "-color_primaries",
+    info.color_primaries || "bt2020",
+    "-color_trc",
+    info.color_transfer,
+    "-colorspace",
+    info.color_space || "bt2020nc",
+  ];
+}
+
 /**
  * HDR (PQ/HLG) passthrough: downscale to an 800px 10-bit AVIF that KEEPS the
  * HDR transfer/primaries, so the browser tone-maps it for SDR displays and
@@ -301,13 +358,7 @@ async function hdrPassthrough(file, rotationCw = 0) {
       String(THUMB_HDR_CRF),
       "-preset",
       "6",
-      // Preserve the source's HDR signalling so browsers render it correctly.
-      "-color_primaries",
-      info.color_primaries || "bt2020",
-      "-color_trc",
-      info.color_transfer,
-      "-colorspace",
-      info.color_space || "bt2020nc",
+      ...hdrColorArgs(info),
       out,
     ]);
     if (!ok) return null;
@@ -318,6 +369,177 @@ async function hdrPassthrough(file, rotationCw = 0) {
     };
   } finally {
     await fs.rm(out, { force: true });
+  }
+}
+
+/* ---------------------------------- video --------------------------------- */
+
+/**
+ * Camera metadata from a QuickTime/MP4 container's format tags.
+ *
+ * Strictly whitelisted rather than filtered: iPhone clips also carry
+ * `com.apple.quicktime.location.ISO6709`, and the gallery never records where
+ * something was shot.
+ */
+function videoExif(tags) {
+  if (!tags) return undefined;
+  const exif = {};
+  if (tags["com.apple.quicktime.make"]) {
+    exif.make = String(tags["com.apple.quicktime.make"]).trim();
+  }
+  if (tags["com.apple.quicktime.model"]) {
+    exif.model = String(tags["com.apple.quicktime.model"]).trim();
+  }
+  // The Apple key keeps the capture's local time and offset; `creation_time` is
+  // whenever the file was last written, which is only a rough stand-in.
+  const taken = toISODate(
+    tags["com.apple.quicktime.creationdate"] || tags.creation_time
+  );
+  if (taken) exif.taken = taken;
+  return Object.keys(exif).length ? exif : undefined;
+}
+
+/**
+ * Probe a video's DISPLAY dimensions, duration, color tags and camera metadata.
+ * `input` is a URL (pass `httpArgs`) or a local file.
+ *
+ * Rotation lives in the stream's display matrix, not in the coded dimensions —
+ * a portrait phone clip is stored landscape plus a 90° matrix — so the two are
+ * swapped here to match both the player's layout and the poster ffmpeg writes.
+ */
+async function ffprobeVideo(input, httpArgs = []) {
+  const out = await execOut("ffprobe", [
+    "-v",
+    "error",
+    ...httpArgs,
+    "-select_streams",
+    "v:0",
+    "-show_entries",
+    "stream=width,height,duration,color_transfer,color_primaries,color_space" +
+      ":stream_side_data=rotation:format=duration:format_tags",
+    "-of",
+    "json",
+    input,
+  ]);
+  let stream;
+  let format;
+  try {
+    const parsed = JSON.parse(out);
+    stream = parsed.streams?.[0];
+    format = parsed.format ?? {};
+  } catch {
+    return null;
+  }
+  const coded = {
+    w: Number(stream?.width) || 0,
+    h: Number(stream?.height) || 0,
+  };
+  if (!coded.w || !coded.h) return null;
+
+  const rotation =
+    stream.side_data_list?.find(entry => entry.rotation != null)?.rotation ?? 0;
+  const swap = Math.abs(Number(rotation)) % 180 === 90;
+
+  return {
+    type: "video",
+    width: swap ? coded.h : coded.w,
+    height: swap ? coded.w : coded.h,
+    duration: round1(Number(format.duration ?? stream.duration) || 0),
+    color_transfer: stream.color_transfer,
+    color_primaries: stream.color_primaries,
+    color_space: stream.color_space,
+    exif: videoExif(format.tags),
+  };
+}
+
+/**
+ * Grab a single frame as the 800px AVIF poster. HDR clips keep their 10-bit HDR
+ * signalling (same reasoning as hdrPassthrough above); SDR clips are scaled by
+ * ffmpeg and encoded by sharp like every other thumbnail.
+ *
+ * ffmpeg's autorotate is deliberately left ON here (unlike the image paths,
+ * which handle irot themselves), so a portrait clip's poster comes out upright
+ * and matches the dimensions ffprobeVideo reports.
+ */
+async function makeVideoPoster(input, info, httpArgs = []) {
+  const seek = Math.max(
+    0,
+    Math.min(POSTER_MAX_SEEK, (info.duration || 0) / 2)
+  ).toFixed(3);
+  const hdr = HDR_TRANSFERS.has(info.color_transfer);
+  const scale = `scale=${THUMB_SIZE}:${THUMB_SIZE}:force_original_aspect_ratio=decrease`;
+  const out = path.join(
+    os.tmpdir(),
+    `gallery-poster-${crypto.randomUUID()}.${hdr ? "avif" : "png"}`
+  );
+  try {
+    const ok = await tryExec("ffmpeg", [
+      "-y",
+      "-loglevel",
+      "error",
+      ...httpArgs,
+      // Input seeking: over HTTP this range-requests around the timestamp
+      // instead of streaming the clip from the start.
+      "-ss",
+      seek,
+      "-i",
+      input,
+      "-frames:v",
+      "1",
+      "-vf",
+      hdr ? `${scale},format=yuv420p10le` : scale,
+      ...(hdr
+        ? [
+            "-c:v",
+            "libsvtav1",
+            "-crf",
+            String(THUMB_HDR_CRF),
+            "-preset",
+            "6",
+            ...hdrColorArgs(info),
+          ]
+        : []),
+      out,
+    ]);
+    if (!ok) return null;
+    const frame = await fs.readFile(out);
+    // The HDR frame is already an 800px AVIF; the SDR one is a scaled PNG.
+    return hdr ? frame : await encodeThumb(frame);
+  } finally {
+    await fs.rm(out, { force: true });
+  }
+}
+
+/**
+ * Poster + metadata for one video URL.
+ *
+ * ffmpeg reads the clip remotely over range requests rather than downloading
+ * it — a gallery clip runs to tens of megabytes and only one frame is wanted.
+ * If ffmpeg was built without HTTPS, or the host refuses it, fall back to
+ * fetching the file once and working from disk.
+ */
+async function processVideo(url) {
+  const httpArgs = ffHttpArgs(url);
+  const remote = await ffprobeVideo(url, httpArgs);
+  if (remote) {
+    const thumb = await makeVideoPoster(url, remote, httpArgs);
+    if (thumb) return { ...remote, thumb };
+  }
+
+  const tmp = path.join(os.tmpdir(), `gallery-video-${crypto.randomUUID()}`);
+  try {
+    const res = await fetch(url, { headers: fetchHeaders(url) });
+    if (!res.ok) throw httpError(res.status);
+    await fs.writeFile(tmp, Buffer.from(await res.arrayBuffer()));
+    const info = await ffprobeVideo(tmp);
+    // Both of these can mean a truncated download rather than a bad file, so
+    // they are worth another attempt.
+    if (!info) throw new TransientError("ffprobe found no video stream");
+    const thumb = await makeVideoPoster(tmp, info);
+    if (!thumb) throw new TransientError("ffmpeg could not extract a poster");
+    return { ...info, thumb };
+  } finally {
+    await fs.rm(tmp, { force: true });
   }
 }
 
@@ -641,6 +863,59 @@ function flushManifest(manifest) {
   return manifestFlush;
 }
 
+/* --------------------------------- fetch ---------------------------------- */
+
+/**
+ * A failure the host may well not repeat: rate limiting, a 5xx, a truncated
+ * read. Worth another go; a 404 or a 403 is not.
+ */
+class TransientError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "TransientError";
+  }
+}
+
+function httpError(status) {
+  const message = `HTTP ${status}`;
+  return status === 429 || status >= 500
+    ? new TransientError(message)
+    : new Error(message);
+}
+
+/**
+ * Retry transient failures with a widening gap.
+ *
+ * Image hosts throttle, and a video costs many range requests rather than one
+ * GET, so a whole CI run used to be one 429 away from red. Permanent failures
+ * (404, 403) still fail on the first try.
+ */
+async function withRetry(url, run) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await run();
+    } catch (err) {
+      if (!(err instanceof TransientError) || attempt >= MAX_ATTEMPTS)
+        throw err;
+      const wait = RETRY_BASE_MS * 2 ** (attempt - 1);
+      console.log(`↻ ${url}\n    ${err.message} — retrying in ${wait / 1000}s`);
+      await new Promise(resolve => setTimeout(resolve, wait));
+    }
+  }
+}
+
+/** Thumbnail + EXIF for one image URL (downloaded once, in full). */
+async function processImage(url) {
+  const res = await fetch(url, { headers: fetchHeaders(url) });
+  if (!res.ok) throw httpError(res.status);
+  const buf = Buffer.from(await res.arrayBuffer());
+  const [{ thumb, width, height }, exif] = await Promise.all([
+    makeThumb(buf),
+    extractExif(buf),
+  ]);
+  return { thumb, width, height, exif };
+}
+
 /* ---------------------------------- pool ---------------------------------- */
 
 /** Run `worker` over `items` with a fixed concurrency. */
@@ -675,9 +950,11 @@ async function main() {
   }
 
   const urls = await collectUrls(domains);
+  const videoCount = [...urls].filter(isVideoUrl).length;
   console.log(
-    `Found ${urls.size} whitelisted image(s) across gallery posts ` +
-      `(domains: ${[...domains].join(", ")}).`
+    `Found ${urls.size} whitelisted item(s) ` +
+      `(${urls.size - videoCount} image(s), ${videoCount} video(s)) ` +
+      `across gallery posts (domains: ${[...domains].join(", ")}).`
   );
 
   await fs.mkdir(THUMBS_DIR, { recursive: true });
@@ -704,20 +981,25 @@ async function main() {
     }
 
     try {
-      const res = await fetch(url, { headers: fetchHeaders(url) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = Buffer.from(await res.arrayBuffer());
+      const media = await withRetry(url, () =>
+        isVideoUrl(url) ? processVideo(url) : processImage(url)
+      );
+      await fs.writeFile(outPath, media.thumb);
 
-      const [{ thumb, width, height }, exif] = await Promise.all([
-        makeThumb(buf),
-        extractExif(buf),
-      ]);
-      await fs.writeFile(outPath, thumb);
-
-      manifest[url] = { width, height, thumb: name, ...(exif ? { exif } : {}) };
+      manifest[url] = {
+        width: media.width,
+        height: media.height,
+        thumb: name,
+        ...(media.type ? { type: media.type } : {}),
+        ...(media.duration ? { duration: media.duration } : {}),
+        ...(media.exif ? { exif: media.exif } : {}),
+      };
       generated += 1;
       await flushManifest(manifest); // durable progress for resumable runs
-      console.log(`✓ ${name}  ${width}×${height}  ${url}`);
+      console.log(
+        `✓ ${name}  ${media.width}×${media.height}` +
+          `${media.duration ? `  ${media.duration}s` : ""}  ${url}`
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       failures.push({ url, message });
@@ -750,7 +1032,7 @@ async function main() {
   );
   if (failures.length > 0) {
     console.error(
-      `\n${failures.length} image(s) failed:\n` +
+      `\n${failures.length} item(s) failed:\n` +
         failures.map(f => `  - ${f.url}: ${f.message}`).join("\n")
     );
     process.exitCode = 1;

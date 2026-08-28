@@ -1,6 +1,7 @@
 ---
 import type { GalleryAlbum } from "@/types/gallery";
 import { useTranslations } from "@/i18n";
+import { formatDuration } from "@/utils/media";
 import config from "@/config";
 
 interface Props {
@@ -25,6 +26,7 @@ const pswpStrings = JSON.stringify({
   prev: t.a11y.lightboxPrev,
   next: t.a11y.lightboxNext,
   error: t.a11y.lightboxError,
+  videoError: t.a11y.lightboxVideoError,
 });
 ---
 
@@ -56,24 +58,48 @@ const pswpStrings = JSON.stringify({
           <div class="g-grid">
             {album.photos.map(photo => (
               <a
-                class="g-item"
+                class:list={[
+                  "g-item",
+                  { "g-item--video": photo.type === "video" },
+                ]}
                 href={photo.src}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ "--ar": photo.width / photo.height }}
                 data-pswp-width={photo.width}
                 data-pswp-height={photo.height}
+                data-pswp-type={photo.type === "video" ? "video" : undefined}
+                data-caption={photo.type === "video" ? photo.alt : undefined}
+                aria-label={
+                  photo.type === "video"
+                    ? `${t.a11y.playVideo}: ${photo.alt}`
+                    : undefined
+                }
                 data-exif-camera={photo.camera ?? ""}
                 data-exif-settings={photo.settings ?? ""}
               >
-                <img
-                  src={photo.thumbSrc}
-                  alt={photo.alt}
-                  width={photo.width}
-                  height={photo.height}
-                  loading="lazy"
-                  decoding="async"
-                />
+                {photo.thumbSrc && (
+                  <img
+                    src={photo.thumbSrc}
+                    alt={photo.alt}
+                    width={photo.width}
+                    height={photo.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
+                {photo.type === "video" && (
+                  <span class="g-play" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                )}
+                {photo.duration ? (
+                  <span class="g-duration" aria-hidden="true">
+                    {formatDuration(photo.duration)}
+                  </span>
+                ) : null}
                 {(photo.alt || photo.camera || photo.settings) && (
                   <div class="g-overlay" aria-hidden="true">
                     {photo.alt && <span class="g-caption">{photo.alt}</span>}
@@ -150,6 +176,49 @@ const pswpStrings = JSON.stringify({
     height: 100%;
     width: 100%;
     object-fit: cover;
+  }
+
+  /* Video affordances. Both sit above the poster and below the hover overlay,
+     and neither takes the pointer — the whole tile is the click target. */
+  .g-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    height: 2.5rem;
+    width: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background-color: rgb(0 0 0 / 0.55);
+    color: #fff;
+    pointer-events: none;
+    transition: background-color 0.2s ease;
+  }
+  .g-play svg {
+    height: 1.25rem;
+    width: 1.25rem;
+    /* The glyph's own bearing sits left of centre; nudge it back onto the axis. */
+    margin-left: 0.125rem;
+  }
+  .g-item:hover .g-play,
+  .g-item:focus-visible .g-play {
+    background-color: rgb(0 0 0 / 0.75);
+  }
+  /* Top-right, deliberately clear of the caption overlay that fills the bottom. */
+  .g-duration {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.375rem;
+    border-radius: 0.25rem;
+    background-color: rgb(0 0 0 / 0.6);
+    padding: 0.0625rem 0.3125rem;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    pointer-events: none;
   }
 
   .g-overlay {

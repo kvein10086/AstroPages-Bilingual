@@ -72,6 +72,8 @@ export default {
     lightboxPrev: "Previous",
     lightboxNext: "Next",
     lightboxError: "The image could not be loaded.",
+    lightboxVideoError: "The video could not be loaded.",
+    playVideo: "Play video",
   },
   notFound: {
     title: "404 Not Found",

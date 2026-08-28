@@ -60,16 +60,21 @@ interface FeaturesConfig {
    */
   search?: "pagefind" | false;
   /**
-   * Photo gallery page (/gallery) collecting images from posts that set
-   * `gallery: true` in their frontmatter. Only images hosted on one of
-   * `imageDomains` are included. Thumbnails and image dimensions are
-   * pre-generated into the repo by `scripts/generate-gallery-thumbs.mjs`
-   * (run locally or via .github/workflows/gallery.yml).
+   * Photo gallery page (/gallery) collecting media from posts that set
+   * `gallery: true` in their frontmatter. Only media hosted on one of
+   * `imageDomains` is included. Thumbnails, video posters and intrinsic
+   * dimensions are pre-generated into the repo by
+   * `scripts/generate-gallery-thumbs.mjs` (run locally or via
+   * .github/workflows/gallery.yml).
    */
   gallery?:
     | {
         enabled: true;
-        /** Hostnames whose images are collected, e.g. ["img.example.com"] */
+        /**
+         * Hostnames whose media is collected, e.g. ["img.example.com"].
+         * Gates videos as well as images — a `.mp4`/`.webm`/`.mov`/`.m4v` URL
+         * on one of these hosts becomes a video item.
+         */
         imageDomains: string[];
       }
     | { enabled: false };

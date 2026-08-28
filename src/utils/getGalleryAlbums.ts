@@ -8,16 +8,18 @@ import type {
 import { postFilter } from "./postFilter";
 import { getPostUrl } from "./getPostPaths";
 import { getAssetPath } from "./withBase";
+import { isVideoUrl } from "./media";
 import config from "@/config";
 
 /**
- * Markdown image matcher: `![alt](url "optional title")`.
+ * Markdown media matcher: `![alt](url "optional title")`.
  * URLs may not contain spaces or a closing paren (image-host URLs never do).
- * This MUST stay in sync with the regex in
+ * Videos use this same syntax and are told apart by their extension, so one
+ * pattern collects both. This MUST stay in sync with the regex in
  * `scripts/generate-gallery-thumbs.mjs` so the site and the thumbnail
- * generator collect exactly the same set of images.
+ * generator collect exactly the same set of media.
  */
-const IMAGE_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
+const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
 
 // Optionally import the generated manifest. `import.meta.glob` degrades to an
 // empty object when the file is absent, so the build never breaks before the
@@ -31,6 +33,10 @@ const manifest: GalleryManifest = Object.values(manifestModules)[0] ?? {};
 /** Default fallback dimensions (3:2) for photos not yet in the manifest. */
 const FALLBACK_WIDTH = 1600;
 const FALLBACK_HEIGHT = 1067;
+
+/** Ditto for videos (16:9), whose posters are only produced by the generator. */
+const FALLBACK_VIDEO_WIDTH = 1920;
+const FALLBACK_VIDEO_HEIGHT = 1080;
 
 /**
  * Normalize the camera name: prefix the make's brand token only when the model
@@ -84,7 +90,7 @@ export function formatSettingsLine(exif: GalleryExif): string | undefined {
   return parts.length ? parts.join(" · ") : undefined;
 }
 
-/** Build one photo, joining the manifest entry (or falling back to the original). */
+/** Build one item, joining the manifest entry (or falling back to the original). */
 function buildPhoto(url: string, alt: string): GalleryPhoto {
   const entry = manifest[url];
   if (entry) {
@@ -96,9 +102,21 @@ function buildPhoto(url: string, alt: string): GalleryPhoto {
       alt,
       camera: entry.exif ? formatCameraLine(entry.exif) : undefined,
       settings: entry.exif ? formatSettingsLine(entry.exif) : undefined,
+      type: entry.type,
+      duration: entry.duration,
     };
   }
-  // Fallback: thumbnail not generated yet — load the original at 3:2.
+  // Fallback: the generator hasn't run yet. An image can stand in for its own
+  // thumbnail; a video can't, so it renders as a poster-less 16:9 tile.
+  if (isVideoUrl(url)) {
+    return {
+      src: url,
+      width: FALLBACK_VIDEO_WIDTH,
+      height: FALLBACK_VIDEO_HEIGHT,
+      alt,
+      type: "video",
+    };
+  }
   return {
     src: url,
     thumbSrc: url,
@@ -122,18 +140,19 @@ export interface ArticleImageInfo {
  * plus intrinsic dimensions. Only images present in the gallery manifest get
  * an entry (a dimensions-only one when the photo carries no EXIF) — post
  * pages use entry presence to decide which article images receive the
- * gallery-style hover overlay.
+ * gallery-style hover overlay. Videos are excluded: in an article they play
+ * inline with native controls rather than opening the viewer.
  */
 export function getArticleImageInfo(
   body: string
 ): Record<string, ArticleImageInfo> {
   if (!config.features.gallery.enabled) return {};
   const info: Record<string, ArticleImageInfo> = {};
-  for (const match of body.matchAll(IMAGE_RE)) {
+  for (const match of body.matchAll(MEDIA_RE)) {
     let url = match[2]?.trim() ?? "";
     if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
     const entry = manifest[url];
-    if (!entry || url in info) continue;
+    if (!entry || entry.type === "video" || url in info) continue;
     info[url] = {
       camera: entry.exif ? formatCameraLine(entry.exif) : undefined,
       settings: entry.exif ? formatSettingsLine(entry.exif) : undefined,
@@ -144,11 +163,11 @@ export function getArticleImageInfo(
   return info;
 }
 
-/** Extract whitelisted images from a post body, de-duplicated, in document order. */
+/** Extract whitelisted media from a post body, de-duplicated, in document order. */
 function extractPhotos(body: string, domains: Set<string>): GalleryPhoto[] {
   const photos: GalleryPhoto[] = [];
   const seen = new Set<string>();
-  for (const match of body.matchAll(IMAGE_RE)) {
+  for (const match of body.matchAll(MEDIA_RE)) {
     const alt = match[1]?.trim() ?? "";
     let url = match[2]?.trim() ?? "";
     if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
@@ -170,7 +189,7 @@ function extractPhotos(body: string, domains: Set<string>): GalleryPhoto[] {
  * Collect gallery albums from a locale's posts.
  *
  * Pages pass their own locale-filtered collection (matching the existing util
- * convention). Only posts with `gallery: true` whose images are hosted on a
+ * convention). Only posts with `gallery: true` whose media is hosted on a
  * configured `imageDomains` host contribute. Albums are ordered newest-first.
  */
 export function getGalleryAlbums(

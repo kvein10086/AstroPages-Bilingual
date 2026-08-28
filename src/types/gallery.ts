@@ -1,8 +1,9 @@
 /**
  * Types for the photo gallery feature.
  *
- * The gallery collects images from posts that set `gallery: true` in their
- * frontmatter. Thumbnails and EXIF are pre-generated into the repo by
+ * The gallery collects images and videos from posts that set `gallery: true`
+ * in their frontmatter. Thumbnails (video posters included) and EXIF are
+ * pre-generated into the repo by
  * `scripts/generate-gallery-thumbs.mjs` (see `src/data/gallery-manifest.json`).
  * The site build reads only the manifest — it never downloads or transcodes.
  */
@@ -32,27 +33,38 @@ export interface GalleryExif {
   taken?: string;
 }
 
-/** One manifest record, keyed by the original image URL. */
+/** One manifest record, keyed by the original media URL. */
 export interface GalleryManifestEntry {
-  /** Intrinsic width of the source image (after orientation) */
+  /** Intrinsic width of the source (after orientation) */
   width: number;
-  /** Intrinsic height of the source image (after orientation) */
+  /** Intrinsic height of the source (after orientation) */
   height: number;
-  /** Thumbnail filename under `public/gallery/thumbs/` */
+  /**
+   * Thumbnail filename under `public/gallery/thumbs/`. For a video this is the
+   * poster frame, generated from the clip itself.
+   */
   thumb: string;
   /** Extracted EXIF, when present */
   exif?: GalleryExif;
+  /** Media kind. Absent means an image — the overwhelming majority. */
+  type?: "video";
+  /** Video duration in seconds, one decimal. Absent for images. */
+  duration?: number;
 }
 
 /** The whole manifest: original URL → entry. */
 export type GalleryManifest = Record<string, GalleryManifestEntry>;
 
-/** A single photo prepared for rendering. */
+/** A single photo or video prepared for rendering. */
 export interface GalleryPhoto {
-  /** Original (full-resolution) image URL — used for the lightbox */
+  /** Original (full-resolution) media URL — used for the lightbox */
   src: string;
-  /** Thumbnail URL (repo asset), or the original URL as a fallback */
-  thumbSrc: string;
+  /**
+   * Thumbnail URL (repo asset), or the original URL as a fallback. Undefined
+   * only for a video whose poster has not been generated yet — there is no
+   * cheap stand-in for a clip the way the original file is for an image.
+   */
+  thumbSrc?: string;
   /** Intrinsic width used for layout aspect-ratio and PhotoSwipe */
   width: number;
   /** Intrinsic height used for layout aspect-ratio and PhotoSwipe */
@@ -63,6 +75,10 @@ export interface GalleryPhoto {
   camera?: string;
   /** Display line 3: shooting parameters, e.g. "24mm · ƒ/1.8 · 1/333s · ISO 64" */
   settings?: string;
+  /** Media kind. Absent means an image. */
+  type?: "video";
+  /** Video duration in seconds, shown as a badge on the grid item. */
+  duration?: number;
 }
 
 /** A group of photos belonging to one post, linked back to the post. */

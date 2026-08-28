@@ -5,7 +5,7 @@ name: Gallery thumbnails
 # up the new thumbnails (the "double build" — the first build renders any new
 # photo from its original URL as a fallback until this lands).
 #
-# NOTE: this requires the image host to serve GitHub Actions runners. i.tsk.im
+# NOTE: this requires the media host to serve GitHub Actions runners. i.tsk.im
 # sits behind Cloudflare bot protection — a WAF Skip rule (or Bot Fight Mode
 # off) for the image path is needed, else fetches get HTTP 403.
 on:
@@ -43,6 +43,11 @@ jobs:
       # BtbN's latest master static build instead of apt: Ubuntu 24.04 ships
       # ffmpeg 6.1 with a 2023-era SVT-AV1, which encodes worse and slower and
       # predates the HEIF irot display-matrix handling.
+      #
+      # ffmpeg/ffprobe also read video posts over HTTPS (range requests for a
+      # single poster frame, never the whole clip), so the build must support
+      # the https protocol — the step below asserts it rather than silently
+      # falling back to downloading every clip in full.
       - name: "🖼️ Install image toolchain"
         run: |
           sudo apt-get update && sudo apt-get install -y libavif-bin imagemagick libimage-exiftool-perl
@@ -51,6 +56,7 @@ jobs:
           tar -xf /tmp/ffmpeg.tar.xz -C /tmp
           sudo install /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg /tmp/ffmpeg-master-latest-linux64-gpl/bin/ffprobe /usr/local/bin/
           ffmpeg -version | head -1
+          ffprobe -protocols | grep -qw https || echo "::warning::ffprobe has no https protocol — video posters will download each clip in full"
 
       - name: "📦 Install pnpm"
         uses: pnpm/action-setup@v4

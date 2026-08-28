@@ -19,6 +19,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import rehypeVideoEmbed from "./src/utils/rehype/rehypeVideoEmbed";
 import config from "./astro-paper.config";
 
 // Pure-static build deployed to Cloudflare Pages.
@@ -72,7 +73,9 @@ export default defineConfig({
         [remarkCollapse, { test: "Table of contents" }],
         remarkMath,
       ],
-      rehypePlugins: [rehypeCallouts, rehypeKatex],
+      // Turns `![caption](…/clip.mp4)` lines into real <video> players.
+      // A fork that configures Astro's `base` must pass the same value here.
+      rehypePlugins: [rehypeCallouts, rehypeKatex, rehypeVideoEmbed],
     }),
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes

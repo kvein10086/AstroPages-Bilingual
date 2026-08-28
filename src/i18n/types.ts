@@ -70,6 +70,8 @@ export interface UIStrings {
     lightboxPrev: string;
     lightboxNext: string;
     lightboxError: string;
+    lightboxVideoError: string;
+    playVideo: string;
   };
   notFound: {
     title: string;
