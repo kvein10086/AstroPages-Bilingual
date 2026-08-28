@@ -22,7 +22,7 @@
 - **中文字体**：内置思源屏显臻宋（`@chinese-fonts/sypxzs`）。
 - **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引。
 - **数学公式**：Markdown 内嵌 LaTeX 公式，构建期由 [KaTeX](https://katex.org/) 渲染（remark-math + rehype-katex），无需客户端 JS。
-- **照片相册**：`/gallery` 页汇集设置了 `gallery: true` 的文章中的图床照片，按文章分组，悬停显示 EXIF（机型/镜头/参数），点击进 [PhotoSwipe](https://photoswipe.com/) 灯箱。缩略图与 EXIF 由脚本预生成入库（见 [照片相册](#-照片相册)）。
+- **照片相册**：`/gallery` 页汇集设置了 `gallery: true` 的文章中的图床照片，按文章分组，悬停显示 EXIF（机型/镜头/参数），点击进 [PhotoSwipe](https://photoswipe.com/) 灯箱。缩略图与 EXIF 由脚本预生成入库（见 [照片相册](#-照片相册)）。**视频同样支持**：链接指向 `.mp4`/`.webm`/`.mov`/`.m4v` 即可，正文渲染成内联播放器，相册页收进一格带播放角标的画面。
 - **SEO 优化**：预配置多语言 Meta 标签、Sitemap 与 OpenGraph。
 
 ## 🛠️ 快速开始
@@ -126,6 +126,8 @@ pnpm dev
 
 `/gallery` 页面把文章正文里的图床照片汇集成相册。它**不依赖单独维护的图片清单**——照片直接来自游记正文的 `![alt](url)` 外链。
 
+视频走同一条路：写法仍是 `![说明](https://img.example.com/clip.mp4)`，靠扩展名（`.mp4`/`.webm`/`.mov`/`.m4v`）区分。正文里渲染成带封面的 `<video controls>` 就地播放，相册页则是一格带播放角标和时长的画面，点开在灯箱里静音自动播放。封面、尺寸和时长由下面的缩略图脚本预生成——它只抓一帧，不会把整段视频拉下来，站点也从不托管或转码视频本身。
+
 ### 1. 开启与配置
 
 在 `astro-paper.config.ts` 中开启，并列出允许收集的图床域名（白名单）：
@@ -152,7 +154,7 @@ gallery: true
 
 ### 2. 生成缩略图与 EXIF
 
-网格显示的是**提交进仓库的缩略图**（`public/gallery/thumbs/`，800px AVIF），配套一份 `src/data/gallery-manifest.json`（记录尺寸与隐私安全的 EXIF 子集，**从不含 GPS**）。站点构建自身零下载、零转码，只读 manifest。
+网格显示的是**提交进仓库的缩略图**（`public/gallery/thumbs/`，800px AVIF），配套一份 `src/data/gallery-manifest.json`（记录尺寸与隐私安全的 EXIF 子集，**从不含 GPS**）。视频的封面帧也存在同一处，manifest 里多记 `type: "video"` 与 `duration`。站点构建自身零下载、零转码，只读 manifest。
 
 本地生成：
 
@@ -163,6 +165,8 @@ node scripts/generate-gallery-thumbs.mjs --prune  # 顺便清理不再被引用�
 
 脚本用 `sharp` 编码缩略图，`exifr` 提取 EXIF。若图床是 `sharp` 预编译版无法解码的 10-bit AVIF，会回退到 `avifdec`（libavif-bin）/ ImageMagick 解码，故这两者仅在需要时安装。
 
+视频需要 `ffmpeg`/`ffprobe`（且编译时带 https 支持）：脚本用 range 请求直接从图床读取，只取一帧做封面，同时读出显示尺寸（会按旋转矩阵摆正竖拍）、时长和机型，**不会下载整段视频**。HDR 片段的封面保留 10-bit HDR 标记。
+
 ### 3. 自动化与"双构建"
 
 `.github/workflows/gallery.yml` 会在 `src/content/posts/**` 变更 push 到 `main` 时自动跑上面的脚本，并把生成的缩略图 + manifest 以 bot 提交推回 `main`。因此新增照片后会经历两次构建：
@@ -172,7 +176,7 @@ node scripts/generate-gallery-thumbs.mjs --prune  # 顺便清理不再被引用�
 
 中间通常只有几分钟的"回退窗口"。该流程零 secret、不触碰部署配置（GITHUB_TOKEN 的推送不会递归触发 Actions，且推送路径不匹配 `paths` 过滤）。若 `main` 开启了分支保护，需允许 Actions 绕过或改用 PAT。
 
-> v1 仅识别 Markdown 图片语法 `![](…)`；MDX 里的 `<img>` 或引用式图片暂不收集。
+> 仅识别 Markdown 图片语法 `![](…)`（视频同样用这个写法）；MDX 里的 `<img>` 或引用式图片暂不收集。
 
 ## 🧩 分支说明
 
