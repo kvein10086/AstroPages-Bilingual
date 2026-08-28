@@ -58,15 +58,19 @@ const POSTER_MAX_SEEK = 1;
 // Transient-failure retries per URL, and the first backoff (doubling after).
 const MAX_ATTEMPTS = 3;
 const RETRY_BASE_MS = 2000;
-// Present as a real browser: self-hosted image hosts (e.g. Cloudflare-fronted
-// ones) often reject non-browser User-Agents or missing Referer with a 403.
+// Hosts disagree about what a well-behaved fetcher looks like. Cloudflare-fronted
+// beds reject anything that isn't a browser with a 403; Wikimedia does the
+// opposite, throttling browser impersonation with a 429 and asking callers to
+// say who they are. So: present as a browser first, and identify on retry.
 const USER_AGENT =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+const PROJECT_USER_AGENT =
+  "AstroPagesBilingual-gallery/1.0 (+https://github.com/t0saki/AstroPages-Bilingual)";
 
-/** Browser-like request headers, with a same-origin Referer for the image host. */
-function fetchHeaders(url) {
+/** Request headers, with a same-origin Referer for the media host. */
+function fetchHeaders(url, identify = false) {
   return {
-    "User-Agent": USER_AGENT,
+    "User-Agent": identify ? PROJECT_USER_AGENT : USER_AGENT,
     Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
     Referer: new URL(url).origin + "/",
@@ -79,10 +83,10 @@ function fetchHeaders(url) {
  * not 403. Range requests keep this to the bytes actually needed rather than
  * the whole clip. MUST come before `-i`.
  */
-function ffHttpArgs(url) {
+function ffHttpArgs(url, identify = false) {
   return [
     "-user_agent",
-    USER_AGENT,
+    identify ? PROJECT_USER_AGENT : USER_AGENT,
     "-headers",
     `Referer: ${new URL(url).origin}/\r\n`,
   ];
@@ -518,8 +522,8 @@ async function makeVideoPoster(input, info, httpArgs = []) {
  * If ffmpeg was built without HTTPS, or the host refuses it, fall back to
  * fetching the file once and working from disk.
  */
-async function processVideo(url) {
-  const httpArgs = ffHttpArgs(url);
+async function processVideo(url, identify = false) {
+  const httpArgs = ffHttpArgs(url, identify);
   const remote = await ffprobeVideo(url, httpArgs);
   if (remote) {
     const thumb = await makeVideoPoster(url, remote, httpArgs);
@@ -528,7 +532,7 @@ async function processVideo(url) {
 
   const tmp = path.join(os.tmpdir(), `gallery-video-${crypto.randomUUID()}`);
   try {
-    const res = await fetch(url, { headers: fetchHeaders(url) });
+    const res = await fetch(url, { headers: fetchHeaders(url, identify) });
     if (!res.ok) throw httpError(res.status);
     await fs.writeFile(tmp, Buffer.from(await res.arrayBuffer()));
     const info = await ffprobeVideo(tmp);
@@ -878,35 +882,40 @@ class TransientError extends Error {
 
 function httpError(status) {
   const message = `HTTP ${status}`;
-  return status === 429 || status >= 500
+  // 403 and 429 are the two ways a host says it dislikes the caller rather than
+  // the URL; the retry answers both by switching User-Agent.
+  return status === 403 || status === 429 || status >= 500
     ? new TransientError(message)
     : new Error(message);
 }
 
 /**
- * Retry transient failures with a widening gap.
+ * Retry transient failures with a widening gap, identifying ourselves from the
+ * second attempt on (see PROJECT_USER_AGENT).
  *
- * Image hosts throttle, and a video costs many range requests rather than one
- * GET, so a whole CI run used to be one 429 away from red. Permanent failures
- * (404, 403) still fail on the first try.
+ * Media hosts throttle, and a video costs many range requests rather than one
+ * GET, so a whole CI run used to be one 429 away from red. A 404 still fails on
+ * the first try.
  */
 async function withRetry(url, run) {
   for (let attempt = 1; ; attempt += 1) {
     try {
-      return await run();
+      return await run(attempt > 1);
     } catch (err) {
       if (!(err instanceof TransientError) || attempt >= MAX_ATTEMPTS)
         throw err;
       const wait = RETRY_BASE_MS * 2 ** (attempt - 1);
-      console.log(`↻ ${url}\n    ${err.message} — retrying in ${wait / 1000}s`);
+      console.log(
+        `↻ ${url}\n    ${err.message} — retrying in ${wait / 1000}s, identifying as ${PROJECT_USER_AGENT}`
+      );
       await new Promise(resolve => setTimeout(resolve, wait));
     }
   }
 }
 
 /** Thumbnail + EXIF for one image URL (downloaded once, in full). */
-async function processImage(url) {
-  const res = await fetch(url, { headers: fetchHeaders(url) });
+async function processImage(url, identify = false) {
+  const res = await fetch(url, { headers: fetchHeaders(url, identify) });
   if (!res.ok) throw httpError(res.status);
   const buf = Buffer.from(await res.arrayBuffer());
   const [{ thumb, width, height }, exif] = await Promise.all([
@@ -981,8 +990,10 @@ async function main() {
     }
 
     try {
-      const media = await withRetry(url, () =>
-        isVideoUrl(url) ? processVideo(url) : processImage(url)
+      const media = await withRetry(url, identify =>
+        isVideoUrl(url)
+          ? processVideo(url, identify)
+          : processImage(url, identify)
       );
       await fs.writeFile(outPath, media.thumb);
 
