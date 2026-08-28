@@ -26,9 +26,17 @@ tags:
 
 ![马里通布图附近“沙漠音乐节”上的一位图阿雷格人](https://upload.wikimedia.org/wikipedia/commons/a/a5/A_touareg_at_the_Festival_au_Desert_near_Timbuktu%2C_Mali_2012.jpg)
 
-## 图片来源
+## 也可以是视频
 
-缩略图为衍生作品，依原图各自的许可协议共享。
+写法和照片完全一样，只要链接指向 `.mp4`、`.webm`、`.mov` 或 `.m4v`，正文里就会
+渲染成一个带封面的播放器，相册页则收进一格带播放角标的画面，点开即播。封面和
+时长同样由缩略图脚本预先生成——它只抓一帧，不会把整段视频拉下来。
+
+![南非卡克卢夫瀑布](https://upload.wikimedia.org/wikipedia/commons/d/df/Karkloof_Falls_%2853460015297%29.webm)
+
+## 素材来源
+
+缩略图与视频封面为衍生作品，依原素材各自的许可协议共享。
 
 - 的的喀喀湖 — © [Diego Delso](https://commons.wikimedia.org/wiki/File:Amanecer_en_el_lago_Titicaca,_Puno,_Per%C3%BA,_2015-08-01,_DD_01.JPG)，CC BY-SA 4.0
 - 天姥寺塔 — © [CEphoto, Uwe Aranas](https://commons.wikimedia.org/wiki/File:Hue_Vietnam_Thien-Mu-Temple-and-Pagoda-03.jpg)，CC BY-SA 3.0
@@ -36,3 +44,4 @@ tags:
 - 尼泊尔苦行僧 — © [Wen-Yan King](https://commons.wikimedia.org/wiki/File:Baba_in_Nepal.jpg)，CC BY 2.0
 - 炸油饼摊贩 — © [IssamBarhoumi](https://commons.wikimedia.org/wiki/File:Beignet_maker.jpg)，CC BY-SA 4.0
 - “沙漠音乐节”上的图阿雷格人 — © [Alfred Weidinger](https://commons.wikimedia.org/wiki/File:A_touareg_at_the_Festival_au_Desert_near_Timbuktu,_Mali_2012.jpg)，CC BY 2.0
+- 卡克卢夫瀑布（视频）— © [flowcomm](https://commons.wikimedia.org/wiki/File:Karkloof_Falls_(53460015297).webm)，CC BY 2.0

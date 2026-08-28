@@ -28,9 +28,20 @@ standing in for your own image-host links.
 
 ![A Tuareg man at the Festival au Désert near Timbuktu, Mali](https://upload.wikimedia.org/wikipedia/commons/a/a5/A_touareg_at_the_Festival_au_Desert_near_Timbuktu%2C_Mali_2012.jpg)
 
-## Photo credits
+## Video works the same way
 
-Thumbnails are derivative works and are shared under each original's license.
+The syntax is the one you already use for photos: point the link at an `.mp4`,
+`.webm`, `.mov` or `.m4v` file and the post renders a player with a poster
+frame, while the gallery collects a tile with a play badge that opens and plays
+in the lightbox. Poster and duration come from the same thumbnail script — it
+grabs a single frame rather than downloading the clip.
+
+![Karkloof Falls, South Africa](https://upload.wikimedia.org/wikipedia/commons/d/df/Karkloof_Falls_%2853460015297%29.webm)
+
+## Credits
+
+Thumbnails and video posters are derivative works and are shared under each
+original's license.
 
 - Lake Titicaca — © [Diego Delso](https://commons.wikimedia.org/wiki/File:Amanecer_en_el_lago_Titicaca,_Puno,_Per%C3%BA,_2015-08-01,_DD_01.JPG), CC BY-SA 4.0
 - Thiên Mụ Pagoda — © [CEphoto, Uwe Aranas](https://commons.wikimedia.org/wiki/File:Hue_Vietnam_Thien-Mu-Temple-and-Pagoda-03.jpg), CC BY-SA 3.0
@@ -38,3 +49,4 @@ Thumbnails are derivative works and are shared under each original's license.
 - Sadhu in Nepal — © [Wen-Yan King](https://commons.wikimedia.org/wiki/File:Baba_in_Nepal.jpg), CC BY 2.0
 - Beignet maker — © [IssamBarhoumi](https://commons.wikimedia.org/wiki/File:Beignet_maker.jpg), CC BY-SA 4.0
 - Tuareg at the Festival au Désert — © [Alfred Weidinger](https://commons.wikimedia.org/wiki/File:A_touareg_at_the_Festival_au_Desert_near_Timbuktu,_Mali_2012.jpg), CC BY 2.0
+- Karkloof Falls (video) — © [flowcomm](https://commons.wikimedia.org/wiki/File:Karkloof_Falls_(53460015297).webm), CC BY 2.0
