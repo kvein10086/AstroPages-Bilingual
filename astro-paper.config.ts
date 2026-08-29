@@ -22,8 +22,9 @@ export default defineAstroPaperConfig({
   features: {
     lightAndDarkMode: true,
     // Dynamic per-post OG images (satori + sharp). Works in the pure-static
-    // Node build. Latin titles render fully; CJK titles fall back to the
-    // satori font set (see og.png.ts) — same behaviour as before the rebase.
+    // Node build. Latin text uses the Google Sans Code webfont; anything
+    // outside it (CJK, Cyrillic, …) is drawn with a fallback family fetched at
+    // build time — see src/utils/getOgFonts.ts.
     dynamicOgImage: true,
     showArchives: true,
     showBackButton: true,

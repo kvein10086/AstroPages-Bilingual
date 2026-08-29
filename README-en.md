@@ -18,7 +18,7 @@ Based on the [astro-paper](https://github.com/satnaing/astro-paper) theme, refac
 - **Pure Static Output (SSG)**: The default branch is fully static and deploys to Cloudflare Pages — no server runtime needed.
 - **Optional Keystatic CMS**: Git-based Headless CMS (`keystatic-workers` branch).
 - **Type-Safe Content**: rigorous `astro:content` schema validation for all blog posts.
-- **Dynamic OG Images**: per-post OpenGraph images generated at build time (satori + sharp).
+- **Dynamic OG Images**: per-post OpenGraph images generated at build time (satori + sharp); CJK (and other non-Latin) titles pull in a fallback font instead of rendering as tofu boxes.
 - **Chinese Font**: bundled Source Han Serif (`@chinese-fonts/sypxzs`).
 - **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language.
 - **Math Formulas**: LaTeX math embedded in Markdown, rendered at build time by [KaTeX](https://katex.org/) (remark-math + rehype-katex) — no client-side JS.

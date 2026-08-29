@@ -18,7 +18,7 @@
 - **纯静态输出 (SSG)**：默认分支为纯静态，部署到 Cloudflare Pages，无需服务端运行时。
 - **可选 Keystatic CMS**：基于 Git 的 Headless CMS（`keystatic-workers` 分支）。
 - **类型安全的内容管理**：对所有博客文章进行严格的 `astro:content` schema 校验。
-- **动态 OG 图片**：基于 satori + sharp 在构建时为每篇文章生成 OpenGraph 图片。
+- **动态 OG 图片**：基于 satori + sharp 在构建时为每篇文章生成 OpenGraph 图片；中文（以及其他非拉丁文字）标题会自动取用回退字体，不会渲染成豆腐块。
 - **中文字体**：内置思源屏显臻宋（`@chinese-fonts/sypxzs`）。
 - **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引。
 - **数学公式**：Markdown 内嵌 LaTeX 公式，构建期由 [KaTeX](https://katex.org/) 渲染（remark-math + rehype-katex），无需客户端 JS。
