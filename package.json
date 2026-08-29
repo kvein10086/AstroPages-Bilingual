@@ -22,7 +22,6 @@
     "@chinese-fonts/sypxzs": "^3.0.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.2",
-    "dayjs": "^1.11.21",
     "katex": "^0.17.0",
     "lodash.kebabcase": "^4.1.1",
     "photoswipe": "^5.4.4",
