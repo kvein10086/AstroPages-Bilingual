@@ -60,11 +60,15 @@ interface FeaturesConfig {
    */
   search?: "pagefind" | false;
   /**
-   * Photo gallery page (/gallery) collecting media from posts that set
-   * `gallery: true` in their frontmatter. Only media hosted on one of
-   * `imageDomains` is included. Thumbnails, video posters and intrinsic
-   * dimensions are pre-generated into the repo by
-   * `scripts/generate-gallery-thumbs.mjs` (run locally or via
+   * Photo gallery page (/gallery) collecting media from posts' bodies.
+   * A post's `gallery` frontmatter flag is its DEFAULT state — `true` selects
+   * its media, unset leaves it out — and either can be overridden per image by
+   * the markdown title `"gallery"` / `"nogallery"`, so an ordinary post may
+   * contribute a single photo and a gallery post may keep a screenshot out.
+   * Only media hosted on one of `imageDomains` is ever included — a marker
+   * cannot override the whitelist.
+   * Thumbnails, video posters and intrinsic dimensions are pre-generated into
+   * the repo by `scripts/generate-gallery-thumbs.mjs` (run locally or via
    * .github/workflows/gallery.yml).
    */
   gallery?:

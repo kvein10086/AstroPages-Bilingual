@@ -15,6 +15,8 @@ const posts = defineCollection({
       title: z.string(),
       featured: z.boolean().optional(),
       draft: z.boolean().optional(),
+      // Default gallery state for this post's media; a per-image markdown
+      // title `"gallery"` / `"nogallery"` overrides it either way.
       gallery: z.boolean().optional(),
       tags: z.array(z.string()).default(["others"]),
       ogImage: image().or(z.string()).optional(),

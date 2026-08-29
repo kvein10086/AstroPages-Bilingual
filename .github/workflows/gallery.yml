@@ -77,7 +77,9 @@ jobs:
       - name: "🏞️ Generate thumbnails + manifest"
         id: generate
         continue-on-error: true
-        run: node scripts/generate-gallery-thumbs.mjs
+        # --prune: an image that opted out (`"nogallery"`) — or a post that lost
+        # its gallery flag — must drop out of the manifest and lose its thumb.
+        run: node scripts/generate-gallery-thumbs.mjs --prune
 
       - name: "💾 Commit generated files"
         run: |

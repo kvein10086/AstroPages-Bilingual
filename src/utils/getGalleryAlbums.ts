@@ -8,18 +8,21 @@ import type {
 import { postFilter } from "./postFilter";
 import { getPostUrl } from "./getPostPaths";
 import { getAssetPath } from "./withBase";
-import { isVideoUrl } from "./media";
+import { isVideoUrl, parseGalleryMarker, stripMarkdownCode } from "./media";
 import config from "@/config";
 
 /**
- * Markdown media matcher: `![alt](url "optional title")`.
+ * Markdown media matcher: `![alt](url "optional title")` — group 1 is the alt
+ * text, group 2 the URL, group 3 the title (which may carry a gallery marker,
+ * see `parseGalleryMarker`).
  * URLs may not contain spaces or a closing paren (image-host URLs never do).
  * Videos use this same syntax and are told apart by their extension, so one
- * pattern collects both. This MUST stay in sync with the regex in
- * `scripts/generate-gallery-thumbs.mjs` so the site and the thumbnail
- * generator collect exactly the same set of media.
+ * pattern collects both. It is always run over a `stripMarkdownCode`-ed body,
+ * so an image quoted inside a code fence isn't mistaken for a real one. This
+ * MUST stay in sync with the regex in `scripts/generate-gallery-thumbs.mjs` so
+ * the site and the thumbnail generator collect exactly the same set of media.
  */
-const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
+const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["']([^"']*)["'])?\s*\)/g;
 
 // Optionally import the generated manifest. `import.meta.glob` degrades to an
 // empty object when the file is absent, so the build never breaks before the
@@ -148,7 +151,7 @@ export function getArticleImageInfo(
 ): Record<string, ArticleImageInfo> {
   if (!config.features.gallery.enabled) return {};
   const info: Record<string, ArticleImageInfo> = {};
-  for (const match of body.matchAll(MEDIA_RE)) {
+  for (const match of stripMarkdownCode(body).matchAll(MEDIA_RE)) {
     let url = match[2]?.trim() ?? "";
     if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
     const entry = manifest[url];
@@ -163,15 +166,32 @@ export function getArticleImageInfo(
   return info;
 }
 
-/** Extract whitelisted media from a post body, de-duplicated, in document order. */
-function extractPhotos(body: string, domains: Set<string>): GalleryPhoto[] {
+/**
+ * Extract whitelisted media from a post body, de-duplicated, in document order.
+ *
+ * `includeByDefault` is the post's frontmatter `gallery` flag: it decides the
+ * unmarked items, while a `"gallery"` / `"nogallery"` title overrides it for a
+ * single one. The `domains` whitelist is checked either way, so a marker can
+ * never admit media from an unconfigured host.
+ *
+ * Code is stripped first, so a post that documents the markdown syntax doesn't
+ * turn its own examples into an album.
+ */
+function extractPhotos(
+  body: string,
+  domains: Set<string>,
+  includeByDefault: boolean
+): GalleryPhoto[] {
   const photos: GalleryPhoto[] = [];
   const seen = new Set<string>();
-  for (const match of body.matchAll(MEDIA_RE)) {
+  for (const match of stripMarkdownCode(body).matchAll(MEDIA_RE)) {
     const alt = match[1]?.trim() ?? "";
     let url = match[2]?.trim() ?? "";
     if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
     if (!url || seen.has(url)) continue;
+    const marker = parseGalleryMarker(match[3]);
+    if (marker === "exclude") continue;
+    if (marker !== "include" && !includeByDefault) continue;
     let hostname: string;
     try {
       hostname = new URL(url).hostname;
@@ -189,8 +209,12 @@ function extractPhotos(body: string, domains: Set<string>): GalleryPhoto[] {
  * Collect gallery albums from a locale's posts.
  *
  * Pages pass their own locale-filtered collection (matching the existing util
- * convention). Only posts with `gallery: true` whose media is hosted on a
- * configured `imageDomains` host contribute. Albums are ordered newest-first.
+ * convention). Every post is scanned: `gallery: true` makes its whitelisted
+ * media selected by default, and a per-image `"gallery"` / `"nogallery"` title
+ * overrides that either way, so an ordinary post contributes an album as soon
+ * as one of its photos opts in. Media must still sit on a configured
+ * `imageDomains` host. Posts left with no selected media are dropped, and
+ * albums are ordered newest-first.
  */
 export function getGalleryAlbums(
   posts: CollectionEntry<"posts">[]
@@ -201,14 +225,17 @@ export function getGalleryAlbums(
 
   return posts
     .filter(postFilter)
-    .filter(post => post.data.gallery === true)
     .sort(
       (a, b) =>
         new Date(b.data.pubDatetime).getTime() -
         new Date(a.data.pubDatetime).getTime()
     )
     .map(post => {
-      const photos = extractPhotos(post.body ?? "", domains);
+      const photos = extractPhotos(
+        post.body ?? "",
+        domains,
+        post.data.gallery === true
+      );
       if (!photos.length) return null;
       return {
         post: {

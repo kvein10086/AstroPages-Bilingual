@@ -1,7 +1,9 @@
 /**
  * Gallery thumbnail + EXIF generator.
  *
- * Scans posts with `gallery: true`, collects their whitelisted media-host URLs,
+ * Scans every post for whitelisted media-host URLs the gallery selects — a
+ * post's frontmatter `gallery` flag is the default and a per-image `"gallery"`
+ * / `"nogallery"` markdown title overrides it (see `parseGalleryMarker`) —
  * downloads each once, extracts a privacy-safe EXIF subset (never GPS, never a
  * video's location tags), and writes an 800px AVIF thumbnail plus a manifest.
  * The Astro build reads only the manifest — it never downloads or transcodes.
@@ -21,7 +23,13 @@
  *     (for gain-map JPEG/HEIC the primary SDR base is used).
  *
  * Usage:
- *   node scripts/generate-gallery-thumbs.mjs [--prune]
+ *   node scripts/generate-gallery-thumbs.mjs [--prune] [--dry-run]
+ *
+ *   --prune    also drop manifest entries + thumbnails nothing references any
+ *              more (an image that just opted out of the gallery, say).
+ *   --dry-run  print the selected URLs and exit, touching neither the manifest
+ *              nor the thumbnails — the way to check what a post contributes
+ *              without writing the CI-owned generated files.
  *
  * Requires Node >= 22 (native fetch) and ffmpeg (HDR passthrough, HEIC decode,
  * video posters — the last needs an ffmpeg built with HTTPS support).
@@ -32,8 +40,11 @@ import path from "node:path";
 import os from "node:os";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
-import sharp from "sharp";
 import exifr from "exifr";
+
+// sharp is loaded on demand so `--dry-run` works in a checkout where the
+// native binary is missing or broken — it only reads markdown.
+let sharp;
 
 const ROOT = process.cwd();
 const CONFIG_FILE = path.join(ROOT, "astro-paper.config.ts");
@@ -52,6 +63,75 @@ const HDR_TRANSFERS = new Set(["smpte2084", "arib-std-b67"]);
 // src/utils/media.ts — the site and this generator must agree on what a video
 // is, or a clip gets an image thumbnail (or no manifest entry at all).
 const VIDEO_EXTS = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+
+/**
+ * Read a per-image gallery marker out of a markdown image title:
+ * `![alt](url "gallery")` → "include", `"nogallery"` → "exclude", anything
+ * else → null (an ordinary title). Trimmed and case-insensitive.
+ *
+ * Keep in sync with parseGalleryMarker in src/utils/media.ts — the site and
+ * this generator must agree on which media is collected, or an excluded image
+ * keeps a thumbnail it should have lost.
+ */
+function parseGalleryMarker(title) {
+  if (!title) return null;
+  switch (title.trim().toLowerCase()) {
+    case "gallery":
+      return "include";
+    case "nogallery":
+      return "exclude";
+    default:
+      return null;
+  }
+}
+/** An opening/closing code fence: up to 3 spaces, then ``` or ~~~ (or longer). */
+const CODE_FENCE_RE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+/** An inline code span, scoped to a single line (see src/utils/media.ts). */
+const INLINE_CODE_RE = /(`+)[^\n]*?\1(?!`)/g;
+/** Only a code span that quotes an image is blanked (see src/utils/media.ts). */
+const quotesImage = span => (span.includes("![") ? "" : span);
+
+/**
+ * Blank out fenced code blocks, and inline code spans that quote an image, so
+ * a post that merely *documents* the markdown syntax doesn't get its examples
+ * downloaded and turned into an album. Other code spans stay (an alt text may
+ * legitimately contain `foo`). Line structure is preserved; indented (4-space)
+ * code blocks are deliberately left alone, since they can't be told apart from
+ * an image nested in a list item without a real markdown parser.
+ *
+ * Keep in sync with stripMarkdownCode in src/utils/media.ts — the site and this
+ * generator must agree on which media is collected.
+ */
+function stripMarkdownCode(body) {
+  let openFence = null;
+  return body
+    .split("\n")
+    .map(line => {
+      const match = CODE_FENCE_RE.exec(line);
+      const run = match?.[1] ?? "";
+      const info = match?.[2] ?? "";
+      if (openFence !== null) {
+        // A closing fence is the same character, at least as long, and bare.
+        if (
+          match &&
+          run[0] === openFence[0] &&
+          run.length >= openFence.length &&
+          info.trim() === ""
+        ) {
+          openFence = null;
+        }
+        return "";
+      }
+      // A backtick fence's info string may not itself contain a backtick.
+      if (match && !(run[0] === "`" && info.includes("`"))) {
+        openFence = run;
+        return "";
+      }
+      return line.replace(INLINE_CODE_RE, quotesImage);
+    })
+    .join("\n");
+}
+
 // Poster frame timestamp. The first frame is often a fade-in or a black lead-in,
 // so seek a second in — but never past the middle of a very short clip.
 const POSTER_MAX_SEEK = 1;
@@ -105,10 +185,13 @@ function isVideoUrl(url) {
 }
 
 // Keep in sync with the regex in src/utils/getGalleryAlbums.ts. Videos use the
-// same markdown image syntax and are told apart by their extension.
-const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["'][^"']*["'])?\s*\)/g;
+// same markdown image syntax and are told apart by their extension. Group 3 is
+// the optional title, which may carry a gallery marker. Always run over a
+// stripMarkdownCode-ed body, so quoted examples aren't collected.
+const MEDIA_RE = /!\[(.*?)\]\(\s*([^)\s]+?)(?:\s+["']([^"']*)["'])?\s*\)/g;
 
 const shouldPrune = process.argv.includes("--prune");
+const dryRun = process.argv.includes("--dry-run");
 
 /* --------------------------------- config --------------------------------- */
 
@@ -173,18 +256,28 @@ function splitFrontmatter(text) {
   return { frontmatter: match[1], body: match[2] };
 }
 
-/** Collect unique whitelisted media URLs across all `gallery: true` posts. */
+/**
+ * Collect the unique whitelisted media URLs the gallery selects, across ALL
+ * posts. `gallery: true` in the frontmatter makes a post's media selected by
+ * default; a `"gallery"` / `"nogallery"` image title overrides that per item,
+ * so an ordinary post can contribute a single photo and a gallery post can
+ * keep a screenshot out. The domain whitelist is checked either way, and code
+ * is stripped first so a post documenting the syntax isn't taken at its word.
+ */
 async function collectUrls(domains) {
   const files = await walk(POSTS_DIR);
   const urls = new Set();
   for (const file of files) {
     const text = await fs.readFile(file, "utf8");
     const { frontmatter, body } = splitFrontmatter(text);
-    if (!/^gallery:\s*true\s*$/m.test(frontmatter)) continue;
-    for (const match of body.matchAll(MEDIA_RE)) {
+    const includeByDefault = /^gallery:\s*true\s*$/m.test(frontmatter);
+    for (const match of stripMarkdownCode(body).matchAll(MEDIA_RE)) {
       let url = match[2]?.trim() ?? "";
       if (url.startsWith("<") && url.endsWith(">")) url = url.slice(1, -1);
       if (!url) continue;
+      const marker = parseGalleryMarker(match[3]);
+      if (marker === "exclude") continue;
+      if (marker !== "include" && !includeByDefault) continue;
       let hostname;
       try {
         hostname = new URL(url).hostname;
@@ -959,13 +1052,22 @@ async function main() {
   }
 
   const urls = await collectUrls(domains);
+
+  // Dry run: report what the posts select and stop. Nothing is read from or
+  // written to the manifest or the thumbnails, which CI owns.
+  if (dryRun) {
+    for (const url of [...urls].sort()) console.log(url);
+    return;
+  }
+
   const videoCount = [...urls].filter(isVideoUrl).length;
   console.log(
     `Found ${urls.size} whitelisted item(s) ` +
       `(${urls.size - videoCount} image(s), ${videoCount} video(s)) ` +
-      `across gallery posts (domains: ${[...domains].join(", ")}).`
+      `across posts (domains: ${[...domains].join(", ")}).`
   );
 
+  ({ default: sharp } = await import("sharp"));
   await fs.mkdir(THUMBS_DIR, { recursive: true });
   const manifest = await readManifest();
 

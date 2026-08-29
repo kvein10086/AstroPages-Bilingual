@@ -19,6 +19,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import rehypeGalleryMarker from "./src/utils/rehype/rehypeGalleryMarker";
 import rehypeVideoEmbed from "./src/utils/rehype/rehypeVideoEmbed";
 import config from "./astro-paper.config";
 
@@ -73,9 +74,16 @@ export default defineConfig({
         [remarkCollapse, { test: "Table of contents" }],
         remarkMath,
       ],
-      // Turns `![caption](…/clip.mp4)` lines into real <video> players.
+      // rehypeGalleryMarker drops the `"gallery"`/`"nogallery"` image titles so
+      // they never surface as tooltips; rehypeVideoEmbed then turns
+      // `![caption](…/clip.mp4)` lines into real <video> players.
       // A fork that configures Astro's `base` must pass the same value here.
-      rehypePlugins: [rehypeCallouts, rehypeKatex, rehypeVideoEmbed],
+      rehypePlugins: [
+        rehypeCallouts,
+        rehypeKatex,
+        rehypeGalleryMarker,
+        rehypeVideoEmbed,
+      ],
     }),
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes
