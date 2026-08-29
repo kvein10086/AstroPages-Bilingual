@@ -28,6 +28,15 @@ standing in for your own image-host links.
 
 ![A Tuareg man at the Festival au Désert near Timbuktu, Mali](https://upload.wikimedia.org/wikipedia/commons/a/a5/A_touareg_at_the_Festival_au_Desert_near_Timbuktu%2C_Mali_2012.jpg)
 
+An image that shouldn't join the album — a screenshot, a route map — takes a
+`"nogallery"` marker after its link: it still renders here in the post, it just
+never reaches the gallery page. The relief map below does exactly that, and the
+marker itself is stripped before it can become a tooltip. The reverse works
+too: a single `"gallery"` photo in an ordinary post joins the gallery on its
+own.
+
+![A relief map of Nepal](https://upload.wikimedia.org/wikipedia/commons/0/0b/Nepal_relief_location_map.jpg "nogallery")
+
 ## Video works the same way
 
 The syntax is the one you already use for photos: point the link at an `.mp4`,
@@ -49,4 +58,5 @@ original's license.
 - Sadhu in Nepal — © [Wen-Yan King](https://commons.wikimedia.org/wiki/File:Baba_in_Nepal.jpg), CC BY 2.0
 - Beignet maker — © [IssamBarhoumi](https://commons.wikimedia.org/wiki/File:Beignet_maker.jpg), CC BY-SA 4.0
 - Tuareg at the Festival au Désert — © [Alfred Weidinger](https://commons.wikimedia.org/wiki/File:A_touareg_at_the_Festival_au_Desert_near_Timbuktu,_Mali_2012.jpg), CC BY 2.0
+- Relief map of Nepal — © [Uwe Dedering](https://commons.wikimedia.org/wiki/File:Nepal_relief_location_map.jpg), CC BY-SA 3.0
 - Karkloof Falls (video) — © [flowcomm](https://commons.wikimedia.org/wiki/File:Karkloof_Falls_(53460015297).webm), CC BY 2.0

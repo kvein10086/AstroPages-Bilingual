@@ -152,6 +152,29 @@ gallery: true
 ---
 ```
 
+#### 逐图控制
+
+`gallery` 只是这篇文章的**默认**状态，单张图片可以用 Markdown 的 title 属性覆盖它：
+
+| frontmatter `gallery` | 无 title / 其它 title | `"nogallery"` | `"gallery"` |
+| --------------------- | --------------------- | ------------- | ----------- |
+| `true`                | 入选                  | **排除**      | 入选        |
+| 未设 / `false`        | 不入选                | 不入选        | **入选**    |
+
+```md
+<!-- 相册文章（gallery: true）里混进一张不该进相册的截图 -->
+
+![当天的徒步路线图](https://img.example.com/route-map.png "nogallery")
+
+<!-- 普通文章（未设 gallery）里单独收一张照片进相册 -->
+
+![出发那天的天空](https://img.example.com/sky.jpg "gallery")
+```
+
+标记忽略首尾空白、大小写不敏感，且必须**完全等于** `gallery` 或 `nogallery`；其它 title 只是普通的图片标题，照常作为 tooltip 显示。域名白名单仍是硬门槛——`"gallery"` 不能把白名单之外的图片塞进来。视频写法相同，规则一致。
+
+控制符不会出现在渲染后的 HTML 里，读者不会看到 `title="nogallery"` 这样的 tooltip。被排除的图就是一张普通图片：不生成缩略图、不进 manifest、正文里也没有 EXIF 悬浮层——已经生成过的条目由下面的 `--prune` 清掉（CI 就是这么跑的）。任何文章只要有 ≥1 张入选的图，就会在 `/gallery` 上单独成为一册。
+
 ### 2. 生成缩略图与 EXIF
 
 网格显示的是**提交进仓库的缩略图**（`public/gallery/thumbs/`，800px AVIF），配套一份 `src/data/gallery-manifest.json`（记录尺寸与隐私安全的 EXIF 子集，**从不含 GPS**）。视频的封面帧也存在同一处，manifest 里多记 `type: "video"` 与 `duration`。站点构建自身零下载、零转码，只读 manifest。
@@ -177,6 +200,8 @@ node scripts/generate-gallery-thumbs.mjs --prune  # 顺便清理不再被引用�
 中间通常只有几分钟的"回退窗口"。该流程零 secret、不触碰部署配置（GITHUB_TOKEN 的推送不会递归触发 Actions，且推送路径不匹配 `paths` 过滤）。若 `main` 开启了分支保护，需允许 Actions 绕过或改用 PAT。
 
 > 仅识别 Markdown 图片语法 `![](…)`（视频同样用这个写法）；MDX 里的 `<img>` 或引用式图片暂不收集。
+>
+> 围栏代码块与行内代码里的图片写法会被跳过，所以可以放心在文章里演示上面这套语法，不会凭空多出一册；四空格缩进的代码块不在此列——它和列表里缩进的图片无法区分，写教程时请用围栏。
 
 ## 🧩 分支说明
 

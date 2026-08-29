@@ -146,6 +146,29 @@ gallery: true
 ---
 ```
 
+#### Per-image control
+
+`gallery` only sets the post's **default**; any single image can override it through the markdown title attribute:
+
+| frontmatter `gallery` | no title / other title | `"nogallery"` | `"gallery"` |
+| --- | --- | --- | --- |
+| `true` | included | **excluded** | included |
+| unset / `false` | not included | not included | **included** |
+
+```md
+<!-- a gallery post (gallery: true) with a screenshot that doesn't belong in the album -->
+
+![The route we walked that day](https://img.example.com/route-map.png "nogallery")
+
+<!-- an ordinary post (no gallery flag) sending one photo to the gallery -->
+
+![The sky on the morning we left](https://img.example.com/sky.jpg "gallery")
+```
+
+Markers are trimmed and case-insensitive and must match `gallery` or `nogallery` **exactly**; every other title is an ordinary image title and still shows as a tooltip. The domain whitelist remains a hard gate — `"gallery"` cannot pull in an image from a host you haven't configured. Videos use the same syntax and follow the same rules.
+
+Markers never reach the rendered HTML, so no reader ever sees a `title="nogallery"` tooltip. An excluded image is just a plain image: no thumbnail, no manifest entry, no EXIF overlay in the post — entries generated earlier are cleared by `--prune` below, which is how CI runs the script. Any post with at least one included image becomes its own album on `/gallery`.
+
 ### 2. Generate thumbnails & EXIF
 
 The grid renders **thumbnails committed to the repo** (`public/gallery/thumbs/`, 800px AVIF) plus a `src/data/gallery-manifest.json` (dimensions and a privacy-safe EXIF subset — **never GPS**). The site build itself downloads and transcodes nothing; it only reads the manifest.
@@ -169,6 +192,8 @@ The script encodes thumbnails with `sharp` and extracts EXIF with `exifr`. If a 
 The "fallback window" in between is usually just a few minutes. The flow needs no secrets and never touches your deploy config (GITHUB_TOKEN pushes don't recursively trigger Actions, and the pushed paths don't match the `paths` filter). If `main` has branch protection, allow Actions to bypass it or use a PAT.
 
 > v1 only recognizes Markdown image syntax `![](…)`; `<img>` in MDX and reference-style images aren't collected yet.
+>
+> Image syntax inside fenced code blocks and inline code spans is skipped, so a post can demonstrate the syntax above without conjuring an album out of its own examples. Indented (4-space) code blocks are not — they can't be told apart from an image nested in a list item — so reach for fences when writing a tutorial.
 
 ## 🧩 Branches
 

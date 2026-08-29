@@ -26,6 +26,12 @@ tags:
 
 ![马里通布图附近“沙漠音乐节”上的一位图阿雷格人](https://upload.wikimedia.org/wikipedia/commons/a/a5/A_touareg_at_the_Festival_au_Desert_near_Timbuktu%2C_Mali_2012.jpg)
 
+不想进相册的图——截图、路线图之类——在链接后面加一个 `"nogallery"` 标记就行：
+它照常在正文里显示，只是不会出现在相册页上。下面这张地形图就是这样，标记本身
+不会渲染成 tooltip。反过来，普通文章里的某张照片写成 `"gallery"` 也能单独入选。
+
+![尼泊尔地形图](https://upload.wikimedia.org/wikipedia/commons/0/0b/Nepal_relief_location_map.jpg "nogallery")
+
 ## 也可以是视频
 
 写法和照片完全一样，只要链接指向 `.mp4`、`.webm`、`.mov` 或 `.m4v`，正文里就会
@@ -44,4 +50,5 @@ tags:
 - 尼泊尔苦行僧 — © [Wen-Yan King](https://commons.wikimedia.org/wiki/File:Baba_in_Nepal.jpg)，CC BY 2.0
 - 炸油饼摊贩 — © [IssamBarhoumi](https://commons.wikimedia.org/wiki/File:Beignet_maker.jpg)，CC BY-SA 4.0
 - “沙漠音乐节”上的图阿雷格人 — © [Alfred Weidinger](https://commons.wikimedia.org/wiki/File:A_touareg_at_the_Festival_au_Desert_near_Timbuktu,_Mali_2012.jpg)，CC BY 2.0
+- 尼泊尔地形图 — © [Uwe Dedering](https://commons.wikimedia.org/wiki/File:Nepal_relief_location_map.jpg)，CC BY-SA 3.0
 - 卡克卢夫瀑布（视频）— © [flowcomm](https://commons.wikimedia.org/wiki/File:Karkloof_Falls_(53460015297).webm)，CC BY 2.0
