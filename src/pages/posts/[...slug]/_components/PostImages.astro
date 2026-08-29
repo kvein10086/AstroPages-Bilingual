@@ -40,6 +40,25 @@ const pswpStrings = JSON.stringify({
   let lightbox: PhotoSwipeLightbox | null = null;
   let viewerImages: HTMLImageElement[] = [];
 
+  /**
+   * The info map is keyed by the URL as written in the markdown, but the
+   * rendered `src` is percent-encoded by the markdown pipeline whenever the
+   * URL carries non-ASCII characters (e.g. a CJK filename). Try the attribute
+   * as-is first, then its decoded form.
+   */
+  function lookupInfo(
+    infoMap: Record<string, ArticleImageInfo>,
+    image: HTMLImageElement
+  ): ArticleImageInfo | undefined {
+    const src = image.getAttribute("src") ?? "";
+    if (infoMap[src]) return infoMap[src];
+    try {
+      return infoMap[decodeURI(src)];
+    } catch {
+      return undefined;
+    }
+  }
+
   function destroyViewer() {
     lightbox?.destroy();
     lightbox = null;
@@ -103,7 +122,7 @@ const pswpStrings = JSON.stringify({
           "aria-label",
           image.alt ? `Zoom image: ${image.alt}` : "Zoom image"
         );
-        const info = infoMap[image.getAttribute("src") ?? ""];
+        const info = lookupInfo(infoMap, image);
         if (info) decoratePhoto(image, info);
       }
     });
@@ -124,7 +143,7 @@ const pswpStrings = JSON.stringify({
       // naturalWidth/Height are real instead of 0.
       lightbox.options.dataSource = viewerImages.map(img => {
         const src = img.currentSrc || img.src;
-        const info = infoMap[img.getAttribute("src") ?? ""];
+        const info = lookupInfo(infoMap, img);
         return {
           src,
           msrc: src,
