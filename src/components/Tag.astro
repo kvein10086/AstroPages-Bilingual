@@ -7,7 +7,11 @@ type Props = {
   tag: string;
   tagName: string;
   size?: "sm" | "lg";
-  /** Pagefind filter name to file this tag under (post pages only). */
+  /**
+   * Pagefind filter for this tag as `name:value` (post pages only). Without
+   * a value Pagefind would take the link text, i.e. the tag as this post
+   * happens to spell it.
+   */
   pagefindFilter?: string;
 };
 
