@@ -89,8 +89,6 @@ export interface UIStrings {
     openMenu: string;
     closeMenu: string;
     toggleTheme: string;
-    searchPlaceholder: string;
-    noResults: string;
     goToPreviousPage: string;
     goToNextPage: string;
     lightboxClose: string;
@@ -108,6 +106,8 @@ export interface UIStrings {
     /** `zoomImage` for an image with alt text. Placeholder: {{alt}} */
     zoomImageAlt: string;
     rssFeed: string;
+    /** Accessible name of the theme button; its state is `aria-pressed`. */
+    darkMode: string;
   };
   notFound: {
     title: string;
@@ -116,4 +116,44 @@ export interface UIStrings {
     searchPosts: string;
     allPosts: string;
   };
+  search: {
+    /** Pagefind UI's own strings, handed to it verbatim (see below). */
+    pagefind: PagefindTranslations;
+    /** `astro dev` only: why there are no results. Followed by the build command. */
+    devHint: string;
+  };
+}
+
+/**
+ * The `translations` option of Pagefind UI (@pagefind/default-ui 1.5): its
+ * snake_case keys, and its own placeholders — `[SEARCH_TERM]`, `[COUNT]`,
+ * `[DIFFERENT_TERM]` — rather than `{{…}}`, since Pagefind fills them in.
+ * Only the first occurrence of each placeholder is replaced.
+ */
+export interface PagefindTranslations {
+  placeholder: string;
+  clear_search: string;
+  load_more: string;
+  search_label: string;
+  filters_label: string;
+  zero_results: string;
+  many_results: string;
+  one_result: string;
+  total_zero_results: string;
+  total_one_result: string;
+  total_many_results: string;
+  alt_search: string;
+  search_suggestion: string;
+  searching: string;
+  results_label: string;
+  keyboard_navigate: string;
+  keyboard_select: string;
+  keyboard_clear: string;
+  keyboard_close: string;
+  keyboard_search: string;
+  error_search: string;
+  filter_selected_one: string;
+  filter_selected_many: string;
+  input_hint: string;
+  loading: string;
 }
