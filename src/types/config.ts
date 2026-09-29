@@ -135,7 +135,13 @@ interface ShareLink {
    * e.g. "facebook" → src/assets/icons/socials/facebook.svg
    */
   name: string;
-  /** Base share URL. The post URL will be appended as a query param. */
+  /**
+   * Share URL template. `{url}` and `{title}` are replaced by the post's URL
+   * and title, both URL-encoded, e.g.
+   * "https://x.com/intent/post?url={url}&text={title}". A template with
+   * neither placeholder gets the encoded post URL appended instead, e.g.
+   * "https://www.facebook.com/sharer.php?u=".
+   */
   url: string;
   /** Rendering style used by the source icon. Defaults to "outline". */
   iconStyle?: "outline" | "solid";

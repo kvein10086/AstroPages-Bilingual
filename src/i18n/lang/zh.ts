@@ -25,6 +25,10 @@ export default {
     toc: "目录",
     readingTime: "约 {{n}} 分钟",
     relatedPosts: "相关文章",
+    copyLink: "复制链接",
+    shareLink: "分享链接",
+    linkCopied: "链接已复制",
+    copyLinkFailed: "复制失败，请从地址栏复制链接",
   },
   pagination: {
     prev: "上一页",

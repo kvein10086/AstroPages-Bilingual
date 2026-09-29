@@ -25,6 +25,10 @@ export default {
     toc: "On this page",
     readingTime: "{{n}} min read",
     relatedPosts: "Related posts",
+    copyLink: "Copy link",
+    shareLink: "Share link",
+    linkCopied: "Link copied",
+    copyLinkFailed: "Couldn't copy — copy the link from the address bar",
   },
   pagination: {
     prev: "Prev",

@@ -24,6 +24,10 @@ export interface UIStrings {
     /** Placeholder: {{n}} (minutes) */
     readingTime: string;
     relatedPosts: string;
+    copyLink: string;
+    shareLink: string;
+    linkCopied: string;
+    copyLinkFailed: string;
   };
   pagination: {
     prev: string;

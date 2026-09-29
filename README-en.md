@@ -139,6 +139,18 @@ Post cards and the post header show an estimated reading time after the date ("5
 
 At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
 
+### Share links
+
+The share row under each post starts with a "Copy link" button (on devices with a system share sheet it opens that instead), followed by `shareLinks` from `astro-paper.config.ts`. In a share URL, `{url}` and `{title}` are replaced by the post's URL and title, both URL-encoded; a URL with neither placeholder gets the post URL appended, as before:
+
+```ts
+shareLinks: [
+  { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+  { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" }, // URL appended
+  { name: "mail", url: "mailto:?subject={title}&body={url}" },
+],
+```
+
 ## 📸 Photo Gallery
 
 The `/gallery` page collects image-host photos straight from your posts' bodies. There's **no separate image list to maintain** — the photos come from the `![alt](url)` links already in your travelogues.

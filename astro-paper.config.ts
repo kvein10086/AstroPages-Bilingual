@@ -52,6 +52,10 @@ export default defineAstroPaperConfig({
     { name: "linkedin", url: "https://www.linkedin.com/in/username/" },
     { name: "mail", url: "mailto:yourmail@gmail.com" },
   ],
+  // `{url}` and `{title}` in a share URL are replaced by the post's URL and
+  // title (URL-encoded); a URL without either gets the post URL appended.
+  // A "copy link" button (the system share sheet where there is one) always
+  // comes first.
   shareLinks: [
     {
       name: "weibo",
@@ -70,9 +74,9 @@ export default defineAstroPaperConfig({
     },
     { name: "whatsapp", url: "https://wa.me/?text=" },
     { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
-    { name: "x", url: "https://x.com/intent/post?url=" },
-    { name: "telegram", url: "https://t.me/share/url?url=" },
+    { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+    { name: "telegram", url: "https://t.me/share/url?url={url}&text={title}" },
     { name: "pinterest", url: "https://pinterest.com/pin/create/button/?url=" },
-    { name: "mail", url: "mailto:?subject=See%20this%20post&body=" },
+    { name: "mail", url: "mailto:?subject={title}&body={url}" },
   ],
 });
