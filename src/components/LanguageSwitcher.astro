@@ -19,20 +19,25 @@ const { href } = await resolveAlternate(Astro.url.pathname, target);
   /* The label is written in the target language, so `lang` makes screen
   readers pronounce it that way. The short visible label says where the link
   goes; the icon alone only says "language". The inner span carries the row
-  layout because the header menu forces its links to `display: block`. */
+  layout because the header menu forces its links to `display: block`.
+  The accessible name starts with that visible label, so a voice-control user
+  can say "click EN" (WCAG 2.5.3). Between the `sm` and `md` breakpoints the
+  header row has no room for it; the label is then only read out. */
 }
 <a
   href={href}
   data-lang-switch={target}
   hreflang={target}
   lang={target}
-  class="focus-outline hover:text-accent flex items-center justify-center"
+  class="focus-outline hover:text-accent flex items-center justify-center sm:h-8"
   title={label}
-  aria-label={label}
 >
   <span class="flex items-center gap-0.5">
-    <IconLanguage class="size-6 shrink-0 sm:size-5" />
-    <span class="text-xs leading-none font-medium">{shortLabel}</span>
+    <IconLanguage aria-hidden="true" class="size-6 shrink-0 sm:size-5" />
+    <span class="text-xs leading-none font-medium sm:max-md:sr-only"
+      >{shortLabel}</span
+    >
+    <span class="sr-only">{` – ${label}`}</span>
   </span>
 </a>
 
