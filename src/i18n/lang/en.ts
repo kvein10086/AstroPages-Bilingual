@@ -28,7 +28,7 @@ export default {
     copyLink: "Copy link",
     shareLink: "Share link",
     linkCopied: "Link copied",
-    copyLinkFailed: "Couldn't copy — copy the link from the address bar",
+    copyLinkFailed: "Couldn't copy — use the address bar",
     tagFilter: "Tag",
   },
   pagination: {

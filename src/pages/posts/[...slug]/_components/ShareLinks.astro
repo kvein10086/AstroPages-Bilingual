@@ -63,7 +63,10 @@ const items = await Promise.all(
  *   there is one (src/scripts/shareLink.ts). It can do neither without script,
  *   so it stays `hidden` until the script has wired it up.
  * - The `role="status"` line shows and announces the copy result. It hangs
- *   below the icon row, so showing it never pushes the page around.
+ *   below the whole share block, out of flow, so showing it never pushes the
+ *   page around. It spans the block (the content column), not the icon row:
+ *   the row shrinks to its icons, and a message measured against it wraps
+ *   into the divider below. One line of it fits the gap above that divider.
  */
 const iconClass =
   "size-6 scale-125 opacity-90 sm:scale-110 fill-transparent stroke-current stroke-2";
@@ -73,10 +76,10 @@ const iconClass =
   items.some(({ Icon }) => Icon) && (
     <div
       data-pagefind-ignore
-      class="flex flex-none flex-col items-center justify-center gap-1 md:items-start"
+      class="relative flex flex-none flex-col items-center justify-center gap-1 md:items-start"
     >
       <span>{t.post.sharePostIntro}</span>
-      <div class="relative text-center md:text-start">
+      <div class="text-center md:text-start">
         <button
           type="button"
           hidden
@@ -131,12 +134,12 @@ const iconClass =
             </LinkButton>
           ) : null
         )}
-        <p
-          role="status"
-          data-share-status
-          class="text-muted-foreground absolute inset-x-0 top-full mt-1 text-sm"
-        />
       </div>
+      <p
+        role="status"
+        data-share-status
+        class="text-muted-foreground absolute inset-x-0 top-full mt-1 text-center text-sm md:text-start"
+      />
     </div>
   )
 }
