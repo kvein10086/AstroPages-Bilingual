@@ -131,6 +131,6 @@ export default {
       input_hint: "输入关键词，结果会随之出现",
       loading: "加载中……",
     },
-    devHint: "开发模式下还没有搜索索引。先构建一次站点，这里才能搜到结果：",
+    devHint: "开发模式下搜的是上次构建生成的索引。还没构建过的话，先运行：",
   },
 } satisfies UIStrings;

@@ -133,6 +133,6 @@ export default {
       loading: "Loading…",
     },
     devHint:
-      "There is no search index in dev mode. Build the site once to see results here:",
+      "Search in dev mode uses the index from the last build. If there is none yet, run:",
   },
 } satisfies UIStrings;
