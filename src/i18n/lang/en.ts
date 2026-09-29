@@ -40,8 +40,8 @@ export default {
     allRightsReserved: "All rights reserved.",
   },
   pages: {
-    tagTitle: "Tag",
-    tagDesc: "All the articles with the tag",
+    tagTitle: "Tag: {{tag}}",
+    tagDesc: "{{count}} posts tagged “{{tag}}”.",
 
     tagsTitle: "Tags",
     tagsDesc: "Posts, threaded by topic.",
@@ -58,6 +58,7 @@ export default {
 
     searchTitle: "Search",
     searchDesc: "A few words to find it again.",
+    tagDescOne: "{{count}} post tagged “{{tag}}”.",
   },
   gallery: {
     albumsNav: "Albums",

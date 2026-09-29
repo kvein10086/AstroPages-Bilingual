@@ -39,7 +39,9 @@ export interface UIStrings {
     allRightsReserved: string;
   };
   pages: {
+    /** Placeholder: {{tag}} */
     tagTitle: string;
+    /** Placeholders: {{count}}, {{tag}} */
     tagDesc: string;
 
     tagsTitle: string;
@@ -57,6 +59,8 @@ export interface UIStrings {
 
     searchTitle: string;
     searchDesc: string;
+    /** `tagDesc` when the tag has exactly one post. Placeholders: {{count}}, {{tag}} */
+    tagDescOne: string;
   };
   gallery: {
     albumsNav: string;

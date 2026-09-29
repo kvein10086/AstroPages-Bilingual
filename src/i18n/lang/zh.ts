@@ -40,8 +40,8 @@ export default {
     allRightsReserved: "保留所有权利。",
   },
   pages: {
-    tagTitle: "标签",
-    tagDesc: "所有带有此标签的文章",
+    tagTitle: "标签：{{tag}}",
+    tagDesc: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
 
     tagsTitle: "标签",
     tagsDesc: "按话题串起的文章。",
@@ -58,6 +58,7 @@ export default {
 
     searchTitle: "搜索",
     searchDesc: "用几个字，找回一篇文章。",
+    tagDescOne: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
   },
   gallery: {
     albumsNav: "相册",
