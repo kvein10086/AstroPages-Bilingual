@@ -291,3 +291,97 @@
     transition: none !important;
   }
 }
+
+/* ===== Reduced motion =====
+   One switch for every transition and animation on the site (the back-to-top
+   slide, the theme icon spin, fades) instead of a motion-reduce variant on
+   each. Durations are cut to a hair rather than removed so transitionend /
+   animationend still fire for any script waiting on them. In the base layer
+   with !important, which beats even !important utilities in later layers.
+   `*` doesn't reach ::view-transition-* pseudo-elements: page transitions
+   are left to Astro's ClientRouter, which handles reduced motion itself. */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ===== Print =====
+   A printout is the post on white paper: light colours whatever the screen
+   theme (the dark tokens are screen-only, see theme.css), no site chrome, and
+   code that wraps instead of being cut off at the page edge. Link URLs are
+   deliberately not printed after links — a post with a long reference list
+   would print every URL twice. Un-layered, so it wins over the layered base
+   and utility rules without !important. */
+@media print {
+  /* Rules keyed on [data-theme="dark"] rather than on the tokens. */
+  html[data-theme="dark"] .astro-code {
+    background-color: var(--shiki-light-bg);
+    color: var(--shiki-light);
+  }
+  html[data-theme="dark"] .astro-code span {
+    color: var(--shiki-light);
+  }
+  html.dark .callout[data-callout] {
+    --rc-color-dark: var(--rc-color-light);
+  }
+  .app-prose img {
+    background-color: transparent;
+  }
+
+  /* Site chrome and screen-only controls. */
+  #skip-to-content,
+  body > header,
+  body > footer,
+  div:has(> #back-button),
+  .progress-container,
+  #btt-btn-container,
+  .heading-link,
+  .copy-code {
+    display: none;
+  }
+
+  /* A post prints as its title, date line and article. Everything after —
+     edit link, tags, sharing, related and adjacent posts — is navigation for
+     the screen, as is the edit link (and its separator) in the date line. */
+  #main-content:has(#article) > :not(h1, h1 + div, :has(#article)),
+  #main-content:has(#article)
+    > h1
+    + div
+    > :is(a, [aria-hidden="true"]:has(+ a)) {
+    display: none;
+  }
+
+  /* Wrap long code lines — a scroll box prints only its visible part. Same
+     for the wide-table scroller that rehypeTableWrap adds. */
+  .astro-code {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .table-wrap {
+    overflow: visible;
+  }
+
+  pre,
+  table,
+  img,
+  video,
+  figure {
+    break-inside: avoid;
+  }
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    break-after: avoid;
+  }
+}
