@@ -108,12 +108,13 @@
 
     /* Dark theme: diagrams with a transparent background are drawn for a
        white page, and their black strokes and labels vanish into the dark
-       one. Sit them on the theme's light ink colour instead; opaque photos
-       cover it completely. JPEG and AVIF — photo formats — are skipped: an
-       image whose size is known before it loads would otherwise show as a
-       light box until it arrives. Not <video>: its black letterbox is meant. */
+       one. Sit them on a light grey — the theme's ink colour toned a step
+       towards the page, so the panel doesn't glare; opaque photos cover it
+       completely. JPEG and AVIF — photo formats — are skipped: an image whose
+       size is known before it loads would otherwise show as a light box until
+       it arrives. Not <video>: its black letterbox is meant. */
     img:not([src*=".jpg" i], [src*=".jpeg" i], [src*=".avif" i]) {
-      @apply dark:bg-foreground;
+      @apply dark:bg-[color-mix(in_oklab,var(--foreground)_85%,var(--background))];
     }
 
     /* Inline players from `![caption](…/clip.mp4)` lines — see
