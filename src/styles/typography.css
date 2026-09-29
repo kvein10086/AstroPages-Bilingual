@@ -115,6 +115,21 @@
     .katex-display {
       @apply overflow-x-auto overflow-y-hidden;
     }
+
+    /* Horizontal scroller around every markdown table, added by
+       src/utils/rehype/rehypeTableWrap.ts, so a wide table scrolls inside its
+       own box instead of widening the page on phones. The table's own margins
+       would be trapped inside the scroller (they can't collapse through it
+       into the neighbouring paragraphs'), so the typography plugin's table
+       margins move out here: 1.75em is its 2em at the table's 0.875em font
+       size, i.e. the spacing is unchanged. */
+    .table-wrap {
+      @apply focus-visible:outline-accent my-[1.75em] overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dashed;
+
+      > table {
+        @apply my-0;
+      }
+    }
   }
 
   /* ===== Code Blocks & Syntax Highlighting ===== */
