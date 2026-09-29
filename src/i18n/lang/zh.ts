@@ -23,6 +23,9 @@ export default {
     previousPost: "上一篇",
     nextPost: "下一篇",
     toc: "目录",
+    copyCode: "复制",
+    codeCopied: "已复制",
+    copyFailed: "复制失败",
   },
   pagination: {
     prev: "上一页",
@@ -97,6 +100,9 @@ export default {
     playVideo: "播放视频",
     openToc: "打开目录",
     closeToc: "关闭目录",
+    headingAnchor: "链接到本节：{{heading}}",
+    zoomImage: "放大图片",
+    zoomImageAlt: "放大图片：{{alt}}",
   },
   notFound: {
     title: "404 未找到",

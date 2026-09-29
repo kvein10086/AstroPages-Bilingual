@@ -3,16 +3,45 @@ import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
 import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
 import { useTranslations } from "@/i18n";
 
+/**
+ * Back-to-top button. Its behaviour (showing up past 30% of the page, the
+ * progress ring on phones, the click) lives in src/scripts/postEnhance.ts,
+ * which the post pages run.
+ *
+ * It starts `inert`: while faded out it still sits over the corner of the
+ * text, and without `inert` it would catch taps meant for the article, take a
+ * Tab stop and be read out as an invisible "back to top" button.
+ *
+ * It also carries the strings for the rest of postEnhance.ts (copy buttons,
+ * heading anchors): this is the only markup that script owns on the page.
+ *
+ * And it is where that script is started. The zh and en post pages are
+ * separate components, so a `<script>` in each would be two entry modules:
+ * after reading a post in both languages, both would be registered and every
+ * post page would get its anchors, copy buttons and progress bar twice. A
+ * component both pages render yields one entry, as with PostToc.astro.
+ */
 const t = useTranslations(Astro.currentLocale);
+
+const postStrings = JSON.stringify({
+  copyCode: t.post.copyCode,
+  codeCopied: t.post.codeCopied,
+  copyFailed: t.post.copyFailed,
+  headingAnchor: t.a11y.headingAnchor,
+});
 ---
+
+<span id="post-enhance-config" hidden data-strings={postStrings}></span>
 
 <div
   id="btt-btn-container"
   class:list={[
     "fixed inset-e-4 bottom-8 z-50",
     "md:sticky md:inset-e-auto md:float-end md:me-1",
-    "translate-y-14 opacity-0 transition duration-500",
+    "translate-y-14 opacity-0 transition duration-500 motion-reduce:transition-none",
   ]}
+  inert
+  data-pagefind-ignore="all"
 >
   <button
     data-button="back-to-top"
@@ -35,53 +64,9 @@ const t = useTranslations(Astro.currentLocale);
   </button>
 </div>
 
-<script is:inline data-astro-rerun>
-  function backToTop() {
-    const rootElement = document.documentElement;
-    const btnContainer = document.querySelector("#btt-btn-container");
-    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
-    const progressIndicator = document.querySelector("#progress-indicator");
+<script>
+  import { initPostEnhance } from "@/scripts/postEnhance";
+  import { onPageReady } from "@/scripts/onPageReady";
 
-    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
-      return;
-
-    backToTopBtn.addEventListener("click", () => {
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-    });
-
-    let lastVisible = null;
-    function handleScroll() {
-      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
-      const scrollTop = rootElement.scrollTop;
-      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
-
-      progressIndicator.style.setProperty(
-        "background-image",
-        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
-      );
-
-      const isVisible = scrollTop / scrollTotal > 0.3;
-
-      if (isVisible !== lastVisible) {
-        btnContainer.classList.toggle("opacity-100", isVisible);
-        btnContainer.classList.toggle("translate-y-0", isVisible);
-        btnContainer.classList.toggle("opacity-0", !isVisible);
-        btnContainer.classList.toggle("translate-y-14", !isVisible);
-        lastVisible = isVisible;
-      }
-    }
-
-    let ticking = false;
-    document.addEventListener("scroll", () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    });
-  }
-  backToTop();
+  onPageReady(initPostEnhance);
 </script>

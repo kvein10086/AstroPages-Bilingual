@@ -21,6 +21,9 @@ export interface UIStrings {
     previousPost: string;
     nextPost: string;
     toc: string;
+    copyCode: string;
+    codeCopied: string;
+    copyFailed: string;
   };
   pagination: {
     prev: string;
@@ -99,6 +102,11 @@ export interface UIStrings {
     playVideo: string;
     openToc: string;
     closeToc: string;
+    /** Placeholder: {{heading}} (the heading's text) */
+    headingAnchor: string;
+    zoomImage: string;
+    /** `zoomImage` for an image with alt text. Placeholder: {{alt}} */
+    zoomImageAlt: string;
   };
   notFound: {
     title: string;

@@ -21,7 +21,12 @@ const pswpStrings = JSON.stringify({
 });
 ---
 
-<span id="post-images-config" hidden data-pswp-strings={pswpStrings}></span>
+<span
+  id="post-images-config"
+  hidden
+  data-pswp-strings={pswpStrings}
+  data-zoom-label={t.a11y.zoomImage}
+  data-zoom-label-alt={t.a11y.zoomImageAlt}></span>
 
 <script>
   import type PhotoSwipeLightbox from "photoswipe/lightbox";
@@ -31,6 +36,7 @@ const pswpStrings = JSON.stringify({
     parseViewerStrings,
   } from "@/scripts/photoViewer";
   import { onPageReady } from "@/scripts/onPageReady";
+  import { tplStr } from "@/i18n/format";
   import type { ArticleImageInfo } from "@/utils/getGalleryAlbums";
 
   /** Fallback slide dimensions (3:2) when an image hasn't loaded yet. */
@@ -108,6 +114,10 @@ const pswpStrings = JSON.stringify({
       infoMap = {};
     }
 
+    const config = document.getElementById("post-images-config");
+    const zoomLabel = config?.dataset.zoomLabel ?? "Zoom image";
+    const zoomLabelAlt = config?.dataset.zoomLabelAlt ?? "Zoom image: {{alt}}";
+
     // Defer attribute/DOM mutations so they don't push the LCP timestamp.
     // The delegated listeners below don't need them to exist yet.
     requestAnimationFrame(() => {
@@ -120,7 +130,7 @@ const pswpStrings = JSON.stringify({
         image.setAttribute("aria-haspopup", "dialog");
         image.setAttribute(
           "aria-label",
-          image.alt ? `Zoom image: ${image.alt}` : "Zoom image"
+          image.alt ? tplStr(zoomLabelAlt, { alt: image.alt }) : zoomLabel
         );
         const info = lookupInfo(infoMap, image);
         if (info) decoratePhoto(image, info);
