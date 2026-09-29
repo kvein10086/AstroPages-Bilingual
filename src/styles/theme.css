@@ -29,14 +29,18 @@
   --border: #ece9e9;
 }
 
-/* Dark theme values */
-[data-theme="dark"] {
-  color-scheme: dark;
-  --background: #212737;
-  --foreground: #eaedf3;
-  --accent: #ff6b01;
-  --accent-foreground: #ffffff;
-  --muted: #343f60;
-  --muted-foreground: #afb9ca;
-  --border: #ab4b08;
+/* Dark theme values — screen only. Paper is white whatever the reader picked
+   on screen, so a printout always gets the light values above; the rest of
+   the print sheet is at the end of global.css. */
+@media not print {
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --background: #212737;
+    --foreground: #eaedf3;
+    --accent: #ff6b01;
+    --accent-foreground: #ffffff;
+    --muted: #343f60;
+    --muted-foreground: #afb9ca;
+    --border: #ab4b08;
+  }
 }
