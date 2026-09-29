@@ -103,5 +103,7 @@ export default {
     title: "404 未找到",
     message: "页面不存在",
     goHome: "返回首页",
+    searchPosts: "搜索文章",
+    allPosts: "浏览全部文章",
   },
 } satisfies UIStrings;

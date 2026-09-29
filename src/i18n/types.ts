@@ -105,5 +105,7 @@ export interface UIStrings {
     title: string;
     message: string;
     goHome: string;
+    searchPosts: string;
+    allPosts: string;
   };
 }

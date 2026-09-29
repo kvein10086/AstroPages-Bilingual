@@ -49,6 +49,10 @@ export default defineConfig({
       filter: page => {
         // Exclude the legacy /zh/* paths from the sitemap.
         if (page.includes("/zh/")) return false;
+        // Exclude the English 404 page. Only the root /404 route is
+        // recognised as a status page; en/404/ is an ordinary route that the
+        // build script copies to en/404.html for Cloudflare Pages.
+        if (page.endsWith("/en/404/")) return false;
         // Exclude archives when the feature is disabled.
         if (
           config.features?.showArchives === false &&
