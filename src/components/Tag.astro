@@ -44,10 +44,9 @@ const t = useTranslations(locale);
          bare number beside it is for sighted readers only. */
       count !== undefined && (
         <span class="sr-only">
-          {tplStr(
-            count === 1 ? t.a11y.postCountOne : t.a11y.postCount,
-            { count }
-          )}
+          {tplStr(count === 1 ? t.a11y.postCountOne : t.a11y.postCount, {
+            count,
+          })}
         </span>
       )
     }
