@@ -259,7 +259,7 @@ pnpm build                   # 验证构建
 - `src/utils/getPostPaths.ts` — 从 slug 中剥离语言目录、按目录推断语言。
 - `src/pages/[lang]/**` — 英文路由树（上游为单语言，无此目录）。
 - `src/pages/**` 中各页的 `getCollection("posts", …)` — 增加了按语言（`zh/`）过滤。
-- `src/components/LanguageSwitcher.astro` + `src/layouts/Layout.astro` 的语言重定向脚本。
+- `src/components/LanguageSwitcher.astro` + `src/layouts/Layout.astro` 的语言重定向脚本，二者都依赖 `src/utils/resolveAlternate.ts`（判断各语言有哪些页面：新页面要在 `src/pages/` 和 `src/pages/[lang]/` 下都有路由文件，才会生成对应语言的链接和 `hreflang`）。
 - `src/styles/theme.css` 的 `--font-app`（中文字体栈）+ `src/layouts/Layout.astro` 的字体导入。
 - `_redirects`、`package.json`（部署相关依赖与脚本）。
 

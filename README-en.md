@@ -251,7 +251,7 @@ pnpm build                   # verify
 - `src/utils/getPostPaths.ts` — strips the locale dir from slugs; infers locale from dir.
 - `src/pages/[lang]/**` — English route tree (upstream is single-language).
 - The `getCollection("posts", …)` calls in `src/pages/**` — add per-locale (`zh/`) filtering.
-- `src/components/LanguageSwitcher.astro` + the redirect script in `src/layouts/Layout.astro`.
+- `src/components/LanguageSwitcher.astro` + the redirect script in `src/layouts/Layout.astro`, both fed by `src/utils/resolveAlternate.ts` (which pages exist in each language: a new page needs a route file in both `src/pages/` and `src/pages/[lang]/` to get a counterpart link and `hreflang`).
 - `src/styles/theme.css` `--font-app` (CJK stack) + the font import in `src/layouts/Layout.astro`.
 - `_redirects`, `package.json` (deploy-related deps & scripts).
 

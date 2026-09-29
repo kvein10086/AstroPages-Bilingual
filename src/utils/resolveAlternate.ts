@@ -20,12 +20,48 @@ type LocaleRoutes = {
   tagPages: Map<string, number>;
 };
 
+/**
+ * Single-segment pages per locale (`about`, `search`, a fork's `projects`…),
+ * read off the route files so a page added to `src/pages/` and
+ * `src/pages/[lang]/` maps across without touching this file. Only the file
+ * names are used: the lazy `?raw` imports are never called.
+ */
+const routeFiles = Object.keys(
+  import.meta.glob(
+    [
+      "/src/pages/*.astro",
+      "/src/pages/*/index.astro",
+      "/src/pages/*/*.astro",
+      "/src/pages/*/*/index.astro",
+    ],
+    { query: "?raw" }
+  )
+);
+
+function findStaticPages(dir: string): Set<string> {
+  const pattern = new RegExp(`^${dir}/([^/]+?)(?:/index)?\\.astro$`);
+  const names = routeFiles.map(file => pattern.exec(file)?.[1]);
+  return new Set(
+    names.filter(
+      (name): name is string =>
+        // Dynamic segments, and the home and 404 pages, are handled apart.
+        !!name && !name.includes("[") && name !== "index" && name !== "404"
+    )
+  );
+}
+
+const staticPages: Record<Locale, Set<string>> = {
+  zh: findStaticPages("/src/pages"),
+  en: findStaticPages("/src/pages/\\[lang\\]"),
+};
+
 const pageCount = (items: number) =>
   Math.max(1, Math.ceil(items / config.posts.perPage));
 
 /**
- * Collect the routes of `locale`. This mirrors the `getStaticPaths()` of the
- * pages under `src/pages/` (and `[lang]/`) — the same collection filters,
+ * Collect the routes of `locale`. Static pages come from the route files;
+ * posts, tags and list pages mirror the `getStaticPaths()` of the pages under
+ * `src/pages/` (and `[lang]/`) — the same collection filters,
  * `getSortedPosts`/`getUniqueTags` and page size — so a page counts as
  * existing exactly when the build emits it. Keep the two in step.
  */
@@ -45,11 +81,11 @@ async function collectRoutes(locale: Locale): Promise<LocaleRoutes> {
   }
 
   const { features } = config;
-  const pages = new Set(["posts", "tags", "about"]);
+  const pages = new Set(["posts", "tags", ...staticPages[locale]]);
   // These pages rewrite themselves to the 404 page when their feature is off.
-  if (features.showArchives) pages.add("archives");
-  if (features.gallery.enabled) pages.add("gallery");
-  if (features.search === "pagefind") pages.add("search");
+  if (!features.showArchives) pages.delete("archives");
+  if (!features.gallery.enabled) pages.delete("gallery");
+  if (features.search !== "pagefind") pages.delete("search");
 
   return {
     pages,
