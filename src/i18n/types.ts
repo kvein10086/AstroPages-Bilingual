@@ -28,6 +28,8 @@ export interface UIStrings {
     shareLink: string;
     linkCopied: string;
     copyLinkFailed: string;
+    /** Name of the tag filter group in search results. */
+    tagFilter: string;
   };
   pagination: {
     prev: string;

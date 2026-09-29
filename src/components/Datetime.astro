@@ -11,6 +11,12 @@ type Props = {
   modDatetime?: string | Date | null;
   /** Minutes, from `getPostReadingTime`; omitted or `null` shows none. */
   readingTime?: number | null;
+  /**
+   * Hand the publish date to Pagefind: a `date` sort key, and metadata the
+   * search results show. Only for the post header: a page's first sort value
+   * wins, and list pages aren't indexed at all.
+   */
+  searchMeta?: boolean;
 };
 
 const {
@@ -20,6 +26,7 @@ const {
   class: className = "",
   timezone: postTimezone,
   readingTime,
+  searchMeta = false,
 } = Astro.props;
 
 const locale = Astro.currentLocale ?? config.site.lang;
@@ -40,6 +47,16 @@ const dateFormatter = new Intl.DateTimeFormat(locale, {
   timeZone: postTimezone ?? config.site.timezone,
 });
 const date = dateFormatter.format(datetime);
+
+// Pagefind compares sort values as text, and ISO strings sort chronologically.
+// The metadata, though, is printed under each search result as "Key: value",
+// so it gets a localised key and the publish date as readers see it
+// ("发布于: 2026年6月9日") instead of a raw timestamp under an English "Date".
+const pubDate = new Date(pubDatetime);
+const searchSort = searchMeta ? `date:${pubDate.toISOString()}` : undefined;
+const searchInfo = searchMeta
+  ? `${t.post.publishedAt}:${dateFormatter.format(pubDate)}`
+  : undefined;
 ---
 
 <div
@@ -64,6 +81,8 @@ const date = dateFormatter.format(datetime);
   <time
     class:list={["text-sm", { "sm:text-base": size === "lg" }]}
     datetime={datetime.toISOString()}
+    data-pagefind-meta={searchInfo}
+    data-pagefind-sort={searchSort}
   >
     {date}
   </time>
