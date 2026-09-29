@@ -5,10 +5,25 @@
  * apply defaults and expose a fully-resolved config shape (`ResolvedAstroPaperConfig`).
  */
 import userConfig from "@/astro-paper.config";
-import type { ResolvedAstroPaperConfig } from "./types/config";
+import type {
+  AstroPaperConfig,
+  ResolvedAstroPaperConfig,
+} from "./types/config";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "default-og.jpg";
+
+/** On unless explicitly disabled; thresholds filled in either way. */
+function resolveToc(
+  toc: NonNullable<AstroPaperConfig["features"]>["toc"]
+): ResolvedAstroPaperConfig["features"]["toc"] {
+  if (toc?.enabled === false) return { enabled: false };
+  return {
+    enabled: true,
+    minHeadings: toc?.minHeadings ?? 3,
+    maxDepth: toc?.maxDepth ?? 3,
+  };
+}
 
 const config: ResolvedAstroPaperConfig = {
   site: {
@@ -34,6 +49,7 @@ const config: ResolvedAstroPaperConfig = {
     editPost: userConfig.features?.editPost ?? { enabled: false },
     search: userConfig.features?.search ?? "pagefind",
     gallery: userConfig.features?.gallery ?? { enabled: false },
+    toc: resolveToc(userConfig.features?.toc),
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],

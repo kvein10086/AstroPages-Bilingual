@@ -23,6 +23,9 @@ const posts = defineCollection({
       description: z.string(),
       canonicalURL: z.string().optional(),
       hideEditPost: z.boolean().optional(),
+      // Table of contents override: `false` hides it, `true` shows it even
+      // below `features.toc.minHeadings`; unset follows the threshold.
+      toc: z.boolean().optional(),
       timezone: z.string().optional(),
     }),
 });

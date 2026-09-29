@@ -7,7 +7,7 @@ import {
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import { unified } from "@astrojs/markdown-remark";
+import { rehypeHeadingIds, unified } from "@astrojs/markdown-remark";
 import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
 import remarkMath from "remark-math";
@@ -21,6 +21,7 @@ import {
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import rehypeGalleryMarker from "./src/utils/rehype/rehypeGalleryMarker";
 import rehypeVideoEmbed from "./src/utils/rehype/rehypeVideoEmbed";
+import rehypeTocLabels from "./src/utils/rehype/rehypeTocLabels";
 import config from "./astro-paper.config";
 
 // Pure-static build deployed to Cloudflare Pages.
@@ -74,6 +75,9 @@ export default defineConfig({
         [remarkCollapse, { test: "Table of contents" }],
         remarkMath,
       ],
+      // rehypeTocLabels records clean heading labels for the post TOC; it needs
+      // KaTeX's output and the heading ids, so Astro's own rehypeHeadingIds
+      // runs early here (its final pass keeps these ids unchanged).
       // rehypeGalleryMarker drops the `"gallery"`/`"nogallery"` image titles so
       // they never surface as tooltips; rehypeVideoEmbed then turns
       // `![caption](…/clip.mp4)` lines into real <video> players.
@@ -81,6 +85,8 @@ export default defineConfig({
       rehypePlugins: [
         rehypeCallouts,
         rehypeKatex,
+        rehypeHeadingIds,
+        rehypeTocLabels,
         rehypeGalleryMarker,
         rehypeVideoEmbed,
       ],

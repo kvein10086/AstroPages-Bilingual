@@ -22,6 +22,7 @@ export default {
     editPage: "编辑此页",
     previousPost: "上一篇",
     nextPost: "下一篇",
+    toc: "目录",
   },
   pagination: {
     prev: "上一页",
@@ -94,6 +95,8 @@ export default {
     lightboxError: "图片加载失败。",
     lightboxVideoError: "视频加载失败。",
     playVideo: "播放视频",
+    openToc: "打开目录",
+    closeToc: "关闭目录",
   },
   notFound: {
     title: "404 未找到",

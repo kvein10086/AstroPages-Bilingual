@@ -22,6 +22,7 @@ export default {
     editPage: "Edit page",
     previousPost: "Previous Post",
     nextPost: "Next Post",
+    toc: "On this page",
   },
   pagination: {
     prev: "Prev",
@@ -94,6 +95,8 @@ export default {
     lightboxError: "The image could not be loaded.",
     lightboxVideoError: "The video could not be loaded.",
     playVideo: "Play video",
+    openToc: "Open table of contents",
+    closeToc: "Close table of contents",
   },
   notFound: {
     title: "404 Not Found",

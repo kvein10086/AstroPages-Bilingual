@@ -20,6 +20,7 @@ export interface UIStrings {
     editPage: string;
     previousPost: string;
     nextPost: string;
+    toc: string;
   };
   pagination: {
     prev: string;
@@ -96,6 +97,8 @@ export interface UIStrings {
     lightboxError: string;
     lightboxVideoError: string;
     playVideo: string;
+    openToc: string;
+    closeToc: string;
   };
   notFound: {
     title: string;

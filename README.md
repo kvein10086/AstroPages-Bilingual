@@ -23,6 +23,7 @@
 - **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引。
 - **数学公式**：Markdown 内嵌 LaTeX 公式，构建期由 [KaTeX](https://katex.org/) 渲染（remark-math + rehype-katex），无需客户端 JS。
 - **照片相册**：`/gallery` 页汇集设置了 `gallery: true` 的文章中的图床照片，按文章分组，悬停显示 EXIF（机型/镜头/参数），点击进 [PhotoSwipe](https://photoswipe.com/) 灯箱。可按相机、镜头、焦段筛选。缩略图与 EXIF 由脚本预生成入库（见 [照片相册](#-照片相册)）。**视频同样支持**：链接指向 `.mp4`/`.webm`/`.mov`/`.m4v` 即可，正文渲染成内联播放器，相册页收进一格带播放角标的画面。
+- **文章目录**：标题足够多的文章自动生成目录——宽屏（≥1280px）在正文右侧常驻并随阅读位置高亮，窄屏收进左下角的浮动按钮，点开是一张目录面板（见 [文章目录](#文章目录)）。
 - **SEO 优化**：预配置多语言 Meta 标签、Sitemap 与 OpenGraph。
 
 ## 🛠️ 快速开始
@@ -121,6 +122,18 @@ pnpm dev
 在 `src/content/posts/zh/` 或 `src/content/posts/en/` 中直接创建 Markdown/MDX 文件即可。**目录前缀即语言**：`zh/` 下的文章生成 `/posts/<slug>`，`en/` 下的文章生成 `/en/posts/<slug>`。两种语言使用相同的 `slug` 即可在语言切换时一一对应。
 
 （在 `keystatic-workers` 分支上，也可以通过 `/keystatic` 可视化编辑。）
+
+### 文章目录
+
+文章里的 h2–h3 标题达到 3 个时，自动生成目录：宽屏（≥1280px）显示在正文右侧、随滚动高亮当前小节；窄屏则是左下角的浮动按钮，点开一张可跳转的目录面板。公式、行内代码、链接等标题会显示成干净的纯文本。阈值与深度在 `astro-paper.config.ts` 中调整：
+
+```ts
+features: {
+  toc: { enabled: true, minHeadings: 3, maxDepth: 3 }, // enabled: false 全站关闭
+},
+```
+
+单篇文章可用 frontmatter 覆盖：`toc: false` 不显示，`toc: true` 即使标题不足也显示。正文里 remark-toc 使用的「Table of contents」/「目录」标题不会进入目录。
 
 ## 📸 照片相册
 

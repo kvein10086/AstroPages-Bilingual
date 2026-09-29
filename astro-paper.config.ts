@@ -37,6 +37,10 @@ export default defineAstroPaperConfig({
       enabled: true,
       imageDomains: ["upload.wikimedia.org"],
     },
+    // Table of contents for posts with at least `minHeadings` h2–h{maxDepth}
+    // headings: a side rail on wide screens, a floating button + sheet below.
+    // Per post, `toc: false` hides it and `toc: true` forces it.
+    toc: { enabled: true, minHeadings: 3, maxDepth: 3 },
   },
   socials: [
     { name: "github", url: "https://github.com/t0saki/AstroPages-Bilingual" },

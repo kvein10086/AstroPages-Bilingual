@@ -23,6 +23,7 @@ Based on the [astro-paper](https://github.com/satnaing/astro-paper) theme, refac
 - **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language.
 - **Math Formulas**: LaTeX math embedded in Markdown, rendered at build time by [KaTeX](https://katex.org/) (remark-math + rehype-katex) — no client-side JS.
 - **Photo Gallery**: a `/gallery` page collecting image-host photos from posts marked `gallery: true`, grouped by post, with EXIF (camera / lens / settings) on hover and a [PhotoSwipe](https://photoswipe.com/) lightbox. Filterable by camera, lens and focal length. Thumbnails and EXIF are pre-generated into the repo (see [Photo Gallery](#-photo-gallery)).
+- **Table of Contents**: posts with enough headings get a TOC — a sticky rail beside the article on wide screens (≥1280px) that highlights the section you're reading, and a floating button that opens it as a sheet on smaller ones (see [Table of contents](#table-of-contents)).
 - **SEO Optimized**: multi-language meta tags, sitemap, and OpenGraph pre-configured.
 
 ## 🛠️ Quick Start
@@ -117,6 +118,18 @@ To edit content on the live site (`/keystatic`), connect Keystatic to GitHub:
 Create Markdown/MDX files in `src/content/posts/zh/` or `src/content/posts/en/`. **The directory prefix is the language**: a file under `zh/` becomes `/posts/<slug>`, and under `en/` becomes `/en/posts/<slug>`. Use the same `slug` in both languages so the language switcher maps them one-to-one.
 
 (On the `keystatic-workers` branch you can also edit visually at `/keystatic`.)
+
+### Table of contents
+
+A post with at least 3 h2–h3 headings gets a table of contents: on wide screens (≥1280px) a rail beside the article that follows your reading position, on smaller screens a floating button (bottom start) that opens it as a sheet. Headings holding math, inline code or links are listed as clean plain text. Tune the threshold and depth in `astro-paper.config.ts`:
+
+```ts
+features: {
+  toc: { enabled: true, minHeadings: 3, maxDepth: 3 }, // enabled: false turns it off site-wide
+},
+```
+
+Per post, frontmatter overrides it: `toc: false` hides it, `toc: true` shows it even below the threshold. A remark-toc "Table of contents" / "目录" heading in the body is never listed.
 
 ## 📸 Photo Gallery
 

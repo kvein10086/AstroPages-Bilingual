@@ -4,6 +4,9 @@
   /* ===== Override default Tailwind Typography styles ===== */
   .app-prose {
     @apply prose;
+    /* Break a token that can't fit rather than let it spill out of the
+       column — over the TOC rail on wide screens. Only kicks in on overflow. */
+    @apply wrap-break-word;
 
     h1,
     h2,

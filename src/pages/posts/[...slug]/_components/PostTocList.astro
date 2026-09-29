@@ -1,0 +1,65 @@
+---
+import type { TocItem } from "@/utils/getTocItems";
+
+/**
+ * One level of the post TOC, recursing into sub-sections. Shared by the side
+ * rail and the sheet so both list the same links in the same order —
+ * src/scripts/postToc.ts pairs them up by position.
+ */
+type Props = {
+  items: TocItem[];
+  variant: "rail" | "sheet";
+};
+
+const { items, variant } = Astro.props;
+---
+
+<ol role="list">
+  {
+    items.map(item => (
+      <li>
+        <a
+          href={`#${item.slug}`}
+          data-toc-id={item.slug}
+          class:list={
+            variant === "rail"
+              ? [
+                  "hover:text-foreground aria-[current=location]:text-accent",
+                  "block py-1 pe-2 leading-snug text-pretty wrap-break-word no-underline",
+                  "-outline-offset-2 transition-colors duration-200",
+                  {
+                    "text-foreground/80 ps-3 text-sm": item.level === 0,
+                    "text-muted-foreground ps-6 text-[0.8125rem]":
+                      item.level === 1,
+                    "text-muted-foreground ps-9 text-[0.8125rem]":
+                      item.level >= 2,
+                  },
+                ]
+              : [
+                  "flex min-h-11 items-center border-s-2 border-transparent py-2 pe-5",
+                  "leading-snug text-pretty wrap-break-word no-underline",
+                  "aria-[current=location]:border-accent aria-[current=location]:text-accent",
+                  "hover:text-accent active:bg-foreground/5 -outline-offset-2",
+                  {
+                    "text-foreground ps-5 text-[0.9375rem]": item.level === 0,
+                    "text-muted-foreground ps-9 text-sm": item.level === 1,
+                    "text-muted-foreground ps-13 text-sm": item.level >= 2,
+                  },
+                ]
+          }
+        >
+          {/* The clamp sits on an inner box: on the padded link itself the
+              third line would peek through the bottom padding. */}
+          {variant === "rail" ? (
+            <span class="line-clamp-3">{item.text}</span>
+          ) : (
+            item.text
+          )}
+        </a>
+        {item.children.length > 0 && (
+          <Astro.self items={item.children} variant={variant} />
+        )}
+      </li>
+    ))
+  }
+</ol>

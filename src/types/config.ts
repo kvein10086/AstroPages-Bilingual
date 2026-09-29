@@ -82,7 +82,26 @@ interface FeaturesConfig {
         imageDomains: string[];
       }
     | { enabled: false };
+  /**
+   * Table of contents beside post articles (side rail ≥1280px, floating
+   * button + sheet below). A post's `toc` frontmatter overrides the threshold:
+   * `false` hides it, `true` shows it whatever the heading count.
+   */
+  toc?:
+    | {
+        enabled: true;
+        /** Fewest listed headings before the TOC appears. Defaults to 3. */
+        minHeadings?: number;
+        /** Deepest heading level listed (h2…h4). Defaults to 3. */
+        maxDepth?: 2 | 3 | 4;
+      }
+    | { enabled: false };
 }
+
+/** `features.toc` with its defaults applied. */
+type ResolvedTocConfig =
+  | { enabled: true; minHeadings: number; maxDepth: 2 | 3 | 4 }
+  | { enabled: false };
 
 interface SocialLink {
   /**
@@ -117,7 +136,7 @@ interface ShareLink {
   linkTitle?: string;
 }
 
-interface AstroPaperConfig {
+export interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
@@ -145,7 +164,7 @@ type ResolvedSiteConfig = Required<
 export interface ResolvedAstroPaperConfig {
   site: ResolvedSiteConfig;
   posts: Required<PostsConfig>;
-  features: Required<FeaturesConfig>;
+  features: Required<Omit<FeaturesConfig, "toc">> & { toc: ResolvedTocConfig };
   socials: SocialLink[];
   shareLinks: ShareLink[];
 }
