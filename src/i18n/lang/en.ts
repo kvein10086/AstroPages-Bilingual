@@ -97,6 +97,7 @@ export default {
     playVideo: "Play video",
     openToc: "Open table of contents",
     closeToc: "Close table of contents",
+    darkMode: "Dark mode",
   },
   notFound: {
     title: "404 Not Found",

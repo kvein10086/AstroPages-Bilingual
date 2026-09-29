@@ -99,6 +99,8 @@ export interface UIStrings {
     playVideo: string;
     openToc: string;
     closeToc: string;
+    /** Accessible name of the theme button; its state is `aria-pressed`. */
+    darkMode: string;
   };
   notFound: {
     title: string;
