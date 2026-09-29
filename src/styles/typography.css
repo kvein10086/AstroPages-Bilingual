@@ -72,7 +72,10 @@
       @apply mb-3;
     }
 
-    h3 {
+    /* Not in Chinese, where there is no italic (see :lang(zh) above). Said
+       here as well because the monospace font of `code` in a heading does
+       have a real italic, which would slant just those words. */
+    h3:not(:lang(zh)) {
       @apply italic;
     }
 
