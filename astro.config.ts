@@ -1,3 +1,5 @@
+import { copyFile } from "node:fs/promises";
+import type { AstroIntegration } from "astro";
 import {
   defineConfig,
   envField,
@@ -27,6 +29,45 @@ import rehypeImageAttrs from "./src/utils/rehype/rehypeImageAttrs";
 import rehypeEmphasisParagraph from "./src/utils/rehype/rehypeEmphasisParagraph";
 import config from "./astro-paper.config";
 
+const DEFAULT_LOCALE = "zh";
+const LOCALES = ["zh", "en"];
+/** Locales served under a `/<locale>/` prefix: all but the default. */
+const PREFIXED_LOCALES = LOCALES.filter(locale => locale !== DEFAULT_LOCALE);
+
+/** A prefixed locale's 404 page, in either build format. */
+const LOCALE_404_PAGE = new RegExp(
+  `/(?:${PREFIXED_LOCALES.join("|")})/404(?:/|\\.html)?$`
+);
+
+/**
+ * Astro only treats the root 404 route as the 404 page. A prefixed locale's
+ * (`src/pages/[lang]/404.astro`) is an ordinary route, built as
+ * `<locale>/404/index.html`, while Cloudflare Pages answers a missing
+ * `/<locale>/…` URL with the nearest `404.html`: copy it there. Nothing to do
+ * when the page doesn't exist — a fork that deleted it, or
+ * `build.format: "file"`, which writes `<locale>/404.html` itself.
+ */
+function localeNotFoundPages(locales: string[]): AstroIntegration {
+  return {
+    name: "locale-404-pages",
+    hooks: {
+      "astro:build:done": async ({ dir, logger }) => {
+        for (const locale of locales) {
+          try {
+            await copyFile(
+              new URL(`${locale}/404/index.html`, dir),
+              new URL(`${locale}/404.html`, dir)
+            );
+            logger.info(`${locale}/404/index.html → ${locale}/404.html`);
+          } catch (error) {
+            if ((error as { code?: string }).code !== "ENOENT") throw error;
+          }
+        }
+      },
+    },
+  };
+}
+
 // Pure-static build deployed to Cloudflare Pages.
 // NOTE: the Astro 6 Cloudflare *Workers* adapter is intentionally NOT used here
 // because its workerd prerenderer currently fails static builds
@@ -38,8 +79,8 @@ export default defineConfig({
   // Bilingual: Chinese is the default locale served at root (`/`),
   // English is served under the `/en/` prefix.
   i18n: {
-    defaultLocale: "zh",
-    locales: ["zh", "en"],
+    defaultLocale: DEFAULT_LOCALE,
+    locales: LOCALES,
     routing: {
       prefixDefaultLocale: false,
       redirectToDefaultLocale: false,
@@ -47,15 +88,15 @@ export default defineConfig({
   },
 
   integrations: [
+    localeNotFoundPages(PREFIXED_LOCALES),
     mdx(),
     sitemap({
       filter: page => {
         // Exclude the legacy /zh/* paths from the sitemap.
         if (page.includes("/zh/")) return false;
-        // Exclude the English 404 page. Only the root /404 route is
-        // recognised as a status page; en/404/ is an ordinary route that the
-        // build script copies to en/404.html for Cloudflare Pages.
-        if (page.endsWith("/en/404/")) return false;
+        // Exclude the other locales' 404 pages, which Astro builds as
+        // ordinary routes (see localeNotFoundPages).
+        if (LOCALE_404_PAGE.test(page)) return false;
         // Exclude archives when the feature is disabled.
         if (
           config.features?.showArchives === false &&

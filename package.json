@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build && pagefind --site dist && cp -r dist/pagefind public/ && cp _redirects dist/ && cp dist/en/404/index.html dist/en/404.html",
+    "build": "astro check && astro build && pagefind --site dist && cp -r dist/pagefind public/ && cp _redirects dist/",
     "preview": "astro preview",
     "sync": "astro sync",
     "astro": "astro",

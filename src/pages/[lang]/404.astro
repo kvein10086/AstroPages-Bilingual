@@ -7,8 +7,9 @@ import { getRelativeLocaleUrl } from "astro:i18n";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
-// Built as dist/en/404/index.html; the build script copies it to
-// dist/en/404.html, which Cloudflare Pages serves for missing /en/* URLs.
+// Built as dist/en/404/index.html; the localeNotFoundPages integration in
+// astro.config.ts copies it to dist/en/404.html, which Cloudflare Pages
+// serves for missing /en/* URLs.
 export function getStaticPaths() {
   return [{ params: { lang: "en" } }];
 }
