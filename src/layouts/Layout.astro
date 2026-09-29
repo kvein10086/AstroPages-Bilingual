@@ -63,6 +63,11 @@ const hreflangLinks =
 const xDefaultHref = hreflangLinks.find(
   ({ code }) => code === DEFAULT_LOCALE
 )?.href;
+
+// Where the first-visit redirect may send a reader of this page, by locale.
+const redirectTargets = Object.fromEntries(
+  counterparts.map(({ code, href }) => [code, href])
+);
 ---
 
 <!doctype html>
@@ -78,14 +83,24 @@ const xDefaultHref = hreflangLinks.find(
     <!--
       Bilingual redirect: honour a manually chosen language (set by the language
       switcher) first, then fall back to the browser language on first visit.
-      Loop-safe: only redirects when the desired locale differs from the current
-      one. zh lives at `/`, en under `/en/`.
+      It only ever goes to this page's verified counterpart, keeping the query
+      string and hash; a page that has none in the desired language (a
+      Chinese-only post or tag, the 404 page) stays put instead of redirecting
+      to a 404. The targets come from resolveAlternate() at build time: this
+      script runs before the hreflang links below are parsed, so it cannot
+      read them. Loop-safe: the counterpart's own desired locale is itself.
     -->
-    <script is:inline>
+    <script
+      is:inline
+      define:vars={{ currentLocale: locale, targets: redirectTargets }}
+    >
       (function () {
+        // define:vars gives every page a different script text, and the
+        // ClientRouter re-runs head scripts whose text it has not seen.
+        // Only act on the first, full page load — as before.
+        if (window.__langRedirectChecked) return;
+        window.__langRedirectChecked = true;
         try {
-          var parts = location.pathname.split("/").filter(Boolean);
-          var current = parts[0] === "en" ? "en" : "zh";
           var pref = localStorage.getItem("preferredLang");
           var nav = (navigator.language || "").toLowerCase();
           var desired =
@@ -95,13 +110,9 @@ const xDefaultHref = hreflangLinks.find(
               : nav.indexOf("en") === 0
                 ? "en"
                 : null);
-          if (!desired || desired === current) return;
-          if (parts[0] === "en") parts.shift();
-          if (desired === "en") parts.unshift("en");
-          var dest = "/" + parts.join("/");
-          if (location.pathname.endsWith("/") && dest !== "/") dest += "/";
-          if (dest !== location.pathname)
-            location.replace(dest + location.search + location.hash);
+          if (!desired || desired === currentLocale) return;
+          if (!Object.prototype.hasOwnProperty.call(targets, desired)) return;
+          location.replace(targets[desired] + location.search + location.hash);
         } catch (e) {}
       })();
     </script>
