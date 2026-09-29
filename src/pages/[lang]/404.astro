@@ -18,6 +18,9 @@ const t = useTranslations(locale);
 ---
 
 <Layout title={`${t.notFound.title} | ${config.site.title}`}>
+  <!-- The page is also reachable with status 200 at its own URL (/404.html,
+  /en/404/); keep that copy out of search results. -->
+  <meta slot="head" name="robots" content="noindex" />
   <Header />
 
   <main
