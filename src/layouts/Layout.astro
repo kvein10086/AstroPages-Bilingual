@@ -1,9 +1,11 @@
 ---
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
-import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
+import { getFeedPath, getFeedTitle } from "@/utils/feed";
+import { resolveAlternate } from "@/utils/resolveAlternate";
+import { DEFAULT_LOCALE, LOCALES } from "@/i18n/helpers";
 import config from "@/config";
 import "@/styles/global.css";
 import "@chinese-fonts/sypxzs/dist/思源屏显臻宋/result.css";
@@ -25,16 +27,53 @@ const {
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
-const rssHref = getRelativeLocaleUrl(
-  Astro.currentLocale ?? config.site.lang,
-  "rss.xml"
+const locale = Astro.currentLocale ?? site.lang;
+
+// This page in every locale, checked against the pages the build actually
+// emits: a tag, post or list page may only exist in one language. The 404
+// page (and anything else the route table does not know) matches nothing,
+// not even in its own locale, so it gets no counterparts.
+const localized = await Promise.all(
+  LOCALES.map(async info => ({
+    ...info,
+    ...(await resolveAlternate(Astro.url.pathname, info.code)),
+  }))
+);
+const isKnownPage = localized.some(
+  ({ code, exact }) => code === locale && exact
+);
+const counterparts = isKnownPage
+  ? localized.filter(({ code, exact }) => code !== locale && exact)
+  : [];
+
+// hreflang annotations have to be reciprocal and list the page itself, so
+// they are only emitted when a real counterpart exists — pointing search
+// engines at a fallback ancestor would pair unrelated pages. x-default is
+// the default-locale page, the one served at the site root.
+const hreflangLinks =
+  counterparts.length === 0
+    ? []
+    : localized
+        .filter(({ exact }) => exact)
+        .map(({ code, hreflang, href }) => ({
+          code,
+          hreflang,
+          href: new URL(href, Astro.site).href,
+        }));
+const xDefaultHref = hreflangLinks.find(
+  ({ code }) => code === DEFAULT_LOCALE
+)?.href;
+
+// Where the first-visit redirect may send a reader of this page, by locale.
+const redirectTargets = Object.fromEntries(
+  counterparts.map(({ code, href }) => [code, href])
 );
 ---
 
 <!doctype html>
 <html
   dir={site.dir ?? "ltr"}
-  lang={Astro.currentLocale ?? site.lang}
+  lang={locale}
   class="overflow-y-scroll scroll-smooth motion-reduce:scroll-auto"
 >
   <head>
@@ -44,14 +83,24 @@ const rssHref = getRelativeLocaleUrl(
     <!--
       Bilingual redirect: honour a manually chosen language (set by the language
       switcher) first, then fall back to the browser language on first visit.
-      Loop-safe: only redirects when the desired locale differs from the current
-      one. zh lives at `/`, en under `/en/`.
+      It only ever goes to this page's verified counterpart, keeping the query
+      string and hash; a page that has none in the desired language (a
+      Chinese-only post or tag, the 404 page) stays put instead of redirecting
+      to a 404. The targets come from resolveAlternate() at build time: this
+      script runs before the hreflang links below are parsed, so it cannot
+      read them. Loop-safe: the counterpart's own desired locale is itself.
     -->
-    <script is:inline>
+    <script
+      is:inline
+      define:vars={{ currentLocale: locale, targets: redirectTargets }}
+    >
       (function () {
+        // define:vars gives every page a different script text, and the
+        // ClientRouter re-runs head scripts whose text it has not seen.
+        // Only act on the first, full page load — as before.
+        if (window.__langRedirectChecked) return;
+        window.__langRedirectChecked = true;
         try {
-          var parts = location.pathname.split("/").filter(Boolean);
-          var current = parts[0] === "en" ? "en" : "zh";
           var pref = localStorage.getItem("preferredLang");
           var nav = (navigator.language || "").toLowerCase();
           var desired =
@@ -61,19 +110,25 @@ const rssHref = getRelativeLocaleUrl(
               : nav.indexOf("en") === 0
                 ? "en"
                 : null);
-          if (!desired || desired === current) return;
-          if (parts[0] === "en") parts.shift();
-          if (desired === "en") parts.unshift("en");
-          var dest = "/" + parts.join("/");
-          if (location.pathname.endsWith("/") && dest !== "/") dest += "/";
-          if (dest !== location.pathname)
-            location.replace(dest + location.search + location.hash);
+          if (!desired || desired === currentLocale) return;
+          if (!Object.prototype.hasOwnProperty.call(targets, desired)) return;
+          location.replace(targets[desired] + location.search + location.hash);
         } catch (e) {}
       })();
     </script>
     <link rel="icon" type="image/svg+xml" href={getAssetPath("favicon.svg")} />
     <link rel="icon" href={getAssetPath("favicon.ico")} />
     <link rel="canonical" href={canonicalURL} />
+    {
+      hreflangLinks.map(({ hreflang, href }) => (
+        <link rel="alternate" hreflang={hreflang} href={href} />
+      ))
+    }
+    {
+      xDefaultHref && (
+        <link rel="alternate" hreflang="x-default" href={xDefaultHref} />
+      )
+    }
     <meta name="generator" content={Astro.generator} />
 
     <!-- Font -->
@@ -108,8 +163,8 @@ const rssHref = getRelativeLocaleUrl(
     <link
       rel="alternate"
       type="application/rss+xml"
-      title={site.title}
-      href={new URL(rssHref, Astro.site)}
+      title={getFeedTitle(locale)}
+      href={new URL(getFeedPath(locale), Astro.site)}
     />
 
     <!-- Filled at runtime by theme.ts to match the current background colour -->

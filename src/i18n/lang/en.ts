@@ -103,10 +103,13 @@ export default {
     headingAnchor: "Link to section: {{heading}}",
     zoomImage: "Zoom image",
     zoomImageAlt: "Zoom image: {{alt}}",
+    rssFeed: "RSS feed",
   },
   notFound: {
     title: "404 Not Found",
     message: "Page Not Found",
     goHome: "Go back home",
+    searchPosts: "Search posts",
+    allPosts: "Browse all posts",
   },
 } satisfies UIStrings;

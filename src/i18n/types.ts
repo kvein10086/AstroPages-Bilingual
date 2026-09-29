@@ -107,10 +107,13 @@ export interface UIStrings {
     zoomImage: string;
     /** `zoomImage` for an image with alt text. Placeholder: {{alt}} */
     zoomImageAlt: string;
+    rssFeed: string;
   };
   notFound: {
     title: string;
     message: string;
     goHome: string;
+    searchPosts: string;
+    allPosts: string;
   };
 }
