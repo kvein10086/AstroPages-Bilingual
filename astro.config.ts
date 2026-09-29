@@ -24,6 +24,7 @@ import rehypeVideoEmbed from "./src/utils/rehype/rehypeVideoEmbed";
 import rehypeTocLabels from "./src/utils/rehype/rehypeTocLabels";
 import rehypeTableWrap from "./src/utils/rehype/rehypeTableWrap";
 import rehypeImageAttrs from "./src/utils/rehype/rehypeImageAttrs";
+import rehypeEmphasisParagraph from "./src/utils/rehype/rehypeEmphasisParagraph";
 import config from "./astro-paper.config";
 
 // Pure-static build deployed to Cloudflare Pages.
@@ -89,6 +90,8 @@ export default defineConfig({
       // `![caption](…/clip.mp4)` lines into real <video> players, and
       // rehypeImageAttrs gives the remaining images lazy loading and their
       // manifest size.
+      // rehypeEmphasisParagraph marks paragraphs that are one long `*…*` (a
+      // figure caption, typically) so Chinese emphasis dots skip them.
       // rehypeTableWrap puts each table in its own horizontal scroller so a
       // wide one can't widen the page on phones.
       // A fork that configures Astro's `base` must pass the same value here.
@@ -100,6 +103,7 @@ export default defineConfig({
         rehypeGalleryMarker,
         rehypeVideoEmbed,
         rehypeImageAttrs,
+        rehypeEmphasisParagraph,
         rehypeTableWrap,
       ],
     }),

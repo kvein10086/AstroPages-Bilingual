@@ -28,6 +28,13 @@
     text-emphasis: filled dot;
     text-emphasis-position: under right;
   }
+  /* Dots suit a few words, not a paragraph that is emphasis from end to end —
+     usually a figure caption, marked by rehypeEmphasisParagraph. Those are set
+     apart by the muted colour instead. */
+  :lang(zh) p.emphasis-paragraph > em {
+    text-emphasis: none;
+    color: var(--muted-foreground);
+  }
   /* A link is already marked by its underline; dots below it as well just
      stack two rows of marks under the same words. */
   :lang(zh) em a {
