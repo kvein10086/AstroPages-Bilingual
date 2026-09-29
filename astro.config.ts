@@ -22,6 +22,8 @@ import { transformerFileName } from "./src/utils/transformers/fileName";
 import rehypeGalleryMarker from "./src/utils/rehype/rehypeGalleryMarker";
 import rehypeVideoEmbed from "./src/utils/rehype/rehypeVideoEmbed";
 import rehypeTocLabels from "./src/utils/rehype/rehypeTocLabels";
+import rehypeTableWrap from "./src/utils/rehype/rehypeTableWrap";
+import rehypeImageAttrs from "./src/utils/rehype/rehypeImageAttrs";
 import config from "./astro-paper.config";
 
 // Pure-static build deployed to Cloudflare Pages.
@@ -80,7 +82,11 @@ export default defineConfig({
       // runs early here (its final pass keeps these ids unchanged).
       // rehypeGalleryMarker drops the `"gallery"`/`"nogallery"` image titles so
       // they never surface as tooltips; rehypeVideoEmbed then turns
-      // `![caption](…/clip.mp4)` lines into real <video> players.
+      // `![caption](…/clip.mp4)` lines into real <video> players, and
+      // rehypeImageAttrs gives the remaining images lazy loading and their
+      // manifest size.
+      // rehypeTableWrap puts each table in its own horizontal scroller so a
+      // wide one can't widen the page on phones.
       // A fork that configures Astro's `base` must pass the same value here.
       rehypePlugins: [
         rehypeCallouts,
@@ -89,6 +95,8 @@ export default defineConfig({
         rehypeTocLabels,
         rehypeGalleryMarker,
         rehypeVideoEmbed,
+        rehypeImageAttrs,
+        rehypeTableWrap,
       ],
     }),
     shikiConfig: {
