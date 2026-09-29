@@ -28,7 +28,8 @@ export interface UIStrings {
   pagination: {
     prev: string;
     next: string;
-    page: string;
+    /** Placeholder: {{n}} (the page number) */
+    pageN: string;
   };
   home: {
     socialLinks: string;
@@ -41,7 +42,9 @@ export interface UIStrings {
     allRightsReserved: string;
   };
   pages: {
+    /** Placeholder: {{tag}} */
     tagTitle: string;
+    /** Placeholders: {{count}}, {{tag}} */
     tagDesc: string;
 
     tagsTitle: string;
@@ -59,6 +62,8 @@ export interface UIStrings {
 
     searchTitle: string;
     searchDesc: string;
+    /** `tagDesc` when the tag has exactly one post. Placeholders: {{count}}, {{tag}} */
+    tagDescOne: string;
   };
   gallery: {
     albumsNav: string;
@@ -108,6 +113,12 @@ export interface UIStrings {
     rssFeed: string;
     /** Accessible name of the theme button; its state is `aria-pressed`. */
     darkMode: string;
+    pagination: string;
+    breadcrumb: string;
+    /** Screen-reader unit for a bare post-count superscript. Placeholder: {{count}} */
+    postCount: string;
+    /** `postCount` when the count is exactly one. Placeholder: {{count}} */
+    postCountOne: string;
   };
   notFound: {
     title: string;

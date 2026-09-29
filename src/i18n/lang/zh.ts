@@ -30,7 +30,7 @@ export default {
   pagination: {
     prev: "上一页",
     next: "下一页",
-    page: "第",
+    pageN: "第 {{n}} 页",
   },
   home: {
     socialLinks: "社交链接",
@@ -43,8 +43,8 @@ export default {
     allRightsReserved: "保留所有权利。",
   },
   pages: {
-    tagTitle: "标签",
-    tagDesc: "所有带有此标签的文章",
+    tagTitle: "标签：{{tag}}",
+    tagDesc: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
 
     tagsTitle: "标签",
     tagsDesc: "按话题串起的文章。",
@@ -61,6 +61,7 @@ export default {
 
     searchTitle: "搜索",
     searchDesc: "用几个字，找回一篇文章。",
+    tagDescOne: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
   },
   gallery: {
     albumsNav: "相册",
@@ -103,6 +104,10 @@ export default {
     zoomImageAlt: "放大图片：{{alt}}",
     rssFeed: "RSS 订阅",
     darkMode: "深色模式",
+    pagination: "分页",
+    breadcrumb: "当前位置",
+    postCount: "（{{count}} 篇文章）",
+    postCountOne: "（{{count}} 篇文章）",
   },
   notFound: {
     title: "404 未找到",

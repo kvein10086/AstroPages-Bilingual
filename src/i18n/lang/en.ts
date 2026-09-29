@@ -30,7 +30,7 @@ export default {
   pagination: {
     prev: "Prev",
     next: "Next",
-    page: "Page",
+    pageN: "Page {{n}}",
   },
   home: {
     socialLinks: "Social Links",
@@ -43,8 +43,8 @@ export default {
     allRightsReserved: "All rights reserved.",
   },
   pages: {
-    tagTitle: "Tag",
-    tagDesc: "All the articles with the tag",
+    tagTitle: "Tag: {{tag}}",
+    tagDesc: "{{count}} posts tagged “{{tag}}”.",
 
     tagsTitle: "Tags",
     tagsDesc: "Posts, threaded by topic.",
@@ -61,6 +61,7 @@ export default {
 
     searchTitle: "Search",
     searchDesc: "A few words to find it again.",
+    tagDescOne: "{{count}} post tagged “{{tag}}”.",
   },
   gallery: {
     albumsNav: "Albums",
@@ -103,6 +104,10 @@ export default {
     zoomImageAlt: "Zoom image: {{alt}}",
     rssFeed: "RSS feed",
     darkMode: "Dark mode",
+    pagination: "Pagination",
+    breadcrumb: "Breadcrumb",
+    postCount: "({{count}} posts)",
+    postCountOne: "({{count}} post)",
   },
   notFound: {
     title: "404 Not Found",
