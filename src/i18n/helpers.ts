@@ -13,11 +13,12 @@ export const DEFAULT_LOCALE = "zh";
 
 /**
  * `hreflang` is the BCP 47 tag used for `<link rel="alternate" hreflang>` and
- * the RSS `<language>` element; `label` is the language's own name.
+ * the RSS `<language>` element; `label` is the language's own name and
+ * `shortLabel` the abbreviation the language switcher shows beside its icon.
  */
 export const LOCALES = [
-  { code: "zh", label: "中文", hreflang: "zh-CN" },
-  { code: "en", label: "English", hreflang: "en" },
+  { code: "zh", label: "中文", shortLabel: "中", hreflang: "zh-CN" },
+  { code: "en", label: "English", shortLabel: "EN", hreflang: "en" },
 ] as const;
 
 export type Locale = (typeof LOCALES)[number]["code"];
