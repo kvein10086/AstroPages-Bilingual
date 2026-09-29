@@ -14,6 +14,12 @@ import { useTranslations } from "@/i18n";
  *
  * It also carries the strings for the rest of postEnhance.ts (copy buttons,
  * heading anchors): this is the only markup that script owns on the page.
+ *
+ * And it is where that script is started. The zh and en post pages are
+ * separate components, so a `<script>` in each would be two entry modules:
+ * after reading a post in both languages, both would be registered and every
+ * post page would get its anchors, copy buttons and progress bar twice. A
+ * component both pages render yields one entry, as with PostToc.astro.
  */
 const t = useTranslations(Astro.currentLocale);
 
@@ -57,3 +63,10 @@ const postStrings = JSON.stringify({
     </span>
   </button>
 </div>
+
+<script>
+  import { initPostEnhance } from "@/scripts/postEnhance";
+  import { onPageReady } from "@/scripts/onPageReady";
+
+  onPageReady(initPostEnhance);
+</script>

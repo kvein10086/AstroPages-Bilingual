@@ -272,10 +272,15 @@ function initScrollChrome(signal: AbortSignal) {
 }
 
 export function initPostEnhance() {
-  teardown?.();
-
   const article = document.getElementById("article");
+  // Enhancing is not idempotent (it inserts anchors, buttons, a progress
+  // bar), so a second run on the same page — a second copy of this module
+  // registered by some other entry point — must be a no-op.
+  if (article?.dataset.postEnhanced !== undefined) return;
+
+  teardown?.();
   if (!article) return;
+  article.dataset.postEnhanced = "";
 
   const controller = new AbortController();
   const { signal } = controller;
