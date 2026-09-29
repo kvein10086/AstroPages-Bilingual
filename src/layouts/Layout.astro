@@ -4,6 +4,8 @@ import { ClientRouter } from "astro:transitions";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
 import { getFeedPath, getFeedTitle } from "@/utils/feed";
+import { resolveAlternate } from "@/utils/resolveAlternate";
+import { DEFAULT_LOCALE, LOCALES } from "@/i18n/helpers";
 import config from "@/config";
 import "@/styles/global.css";
 import "@chinese-fonts/sypxzs/dist/思源屏显臻宋/result.css";
@@ -26,6 +28,41 @@ const {
 
 const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
 const locale = Astro.currentLocale ?? site.lang;
+
+// This page in every locale, checked against the pages the build actually
+// emits: a tag, post or list page may only exist in one language. The 404
+// page (and anything else the route table does not know) matches nothing,
+// not even in its own locale, so it gets no counterparts.
+const localized = await Promise.all(
+  LOCALES.map(async info => ({
+    ...info,
+    ...(await resolveAlternate(Astro.url.pathname, info.code)),
+  }))
+);
+const isKnownPage = localized.some(
+  ({ code, exact }) => code === locale && exact
+);
+const counterparts = isKnownPage
+  ? localized.filter(({ code, exact }) => code !== locale && exact)
+  : [];
+
+// hreflang annotations have to be reciprocal and list the page itself, so
+// they are only emitted when a real counterpart exists — pointing search
+// engines at a fallback ancestor would pair unrelated pages. x-default is
+// the default-locale page, the one served at the site root.
+const hreflangLinks =
+  counterparts.length === 0
+    ? []
+    : localized
+        .filter(({ exact }) => exact)
+        .map(({ code, hreflang, href }) => ({
+          code,
+          hreflang,
+          href: new URL(href, Astro.site).href,
+        }));
+const xDefaultHref = hreflangLinks.find(
+  ({ code }) => code === DEFAULT_LOCALE
+)?.href;
 ---
 
 <!doctype html>
@@ -71,6 +108,16 @@ const locale = Astro.currentLocale ?? site.lang;
     <link rel="icon" type="image/svg+xml" href={getAssetPath("favicon.svg")} />
     <link rel="icon" href={getAssetPath("favicon.ico")} />
     <link rel="canonical" href={canonicalURL} />
+    {
+      hreflangLinks.map(({ hreflang, href }) => (
+        <link rel="alternate" hreflang={hreflang} href={href} />
+      ))
+    }
+    {
+      xDefaultHref && (
+        <link rel="alternate" hreflang="x-default" href={xDefaultHref} />
+      )
+    }
     <meta name="generator" content={Astro.generator} />
 
     <!-- Font -->
