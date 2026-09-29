@@ -6,9 +6,10 @@ import config from "@/config";
 
 type Props = {
   /**
-   * Display names for URL segments whose slug is not what readers should
-   * see, keyed by the decoded segment — e.g. `{ "web-dev": "Web Dev" }` on a
-   * tag page, so the crumb shows the tag as written instead of its slug.
+   * Display names for URL segments below the section whose slug is not what
+   * readers should see, keyed by the decoded segment — e.g.
+   * `{ "web-dev": "Web Dev" }` on a tag page, so the crumb shows the tag as
+   * written instead of its slug. Never applied to the section itself.
    */
   labels?: Record<string, string>;
 };
@@ -75,7 +76,10 @@ const crumbs: Crumb[] = segments.flatMap((segment, index) => {
       : [];
   }
 
-  const label = labels[segment] ?? (index === 0 && navLabels[segment]);
+  // The first segment is always a section; `labels` names what sits below
+  // it. Keeping the two apart stops a tag called "Tags" or "posts" from
+  // renaming the section crumb, and a section name from leaking downwards.
+  const label = index === 0 ? navLabels[segment] : labels[segment];
   return [{ label: label || segment, href, isSlug: !label }];
 });
 ---
