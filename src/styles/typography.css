@@ -1,6 +1,20 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
+  /* ===== Per-language typography =====
+     Source Han Serif, first in --font-app, also covers Latin text, and its CN
+     glyphs for ’ ‘ “ ” — and … are full-width: smartypants turns every
+     apostrophe into one, so English read "lens’ s". Its `pwid` feature swaps
+     in proportional forms; fonts without it are unaffected. Chinese keeps the
+     full-width forms, which are correct there — also a passage marked
+     lang="zh" inside an English page. */
+  :lang(en) {
+    font-variant-east-asian: proportional-width;
+  }
+  :lang(zh) {
+    font-variant-east-asian: normal;
+  }
+
   /* ===== Override default Tailwind Typography styles ===== */
   .app-prose {
     @apply prose;
