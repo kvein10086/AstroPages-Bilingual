@@ -22,7 +22,7 @@ Based on the [astro-paper](https://github.com/satnaing/astro-paper) theme, refac
 - **Chinese Font**: bundled Source Han Serif (`@chinese-fonts/sypxzs`).
 - **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language.
 - **Math Formulas**: LaTeX math embedded in Markdown, rendered at build time by [KaTeX](https://katex.org/) (remark-math + rehype-katex) — no client-side JS.
-- **Photo Gallery**: a `/gallery` page collecting image-host photos from posts marked `gallery: true`, grouped by post, with EXIF (camera / lens / settings) on hover and a [PhotoSwipe](https://photoswipe.com/) lightbox. Thumbnails and EXIF are pre-generated into the repo (see [Photo Gallery](#-photo-gallery)).
+- **Photo Gallery**: a `/gallery` page collecting image-host photos from posts marked `gallery: true`, grouped by post, with EXIF (camera / lens / settings) on hover and a [PhotoSwipe](https://photoswipe.com/) lightbox. Filterable by camera, lens and focal length. Thumbnails and EXIF are pre-generated into the repo (see [Photo Gallery](#-photo-gallery)).
 - **SEO Optimized**: multi-language meta tags, sitemap, and OpenGraph pre-configured.
 
 ## 🛠️ Quick Start
@@ -194,6 +194,15 @@ The "fallback window" in between is usually just a few minutes. The flow needs n
 > v1 only recognizes Markdown image syntax `![](…)`; `<img>` in MDX and reference-style images aren't collected yet.
 >
 > Image syntax inside fenced code blocks and inline code spans is skipped, so a post can demonstrate the syntax above without conjuring an album out of its own examples. Indented (4-space) code blocks are not — they can't be told apart from an image nested in a list item — so reach for fences when writing a tutorial.
+
+### 4. Filtering by camera / lens / focal length
+
+The gallery page opens with a collapsed **Filter** panel: its first row is an album index (click to jump to an album), followed by three groups of multi-select chips — **camera**, **lens**, and **focal length** (35mm-equivalent, in six buckets from ultra-wide to super tele). Choices within a group are OR-ed and groups are AND-ed; each chip's count updates live with the other groups' picks, and photos lacking that piece of EXIF fall under "Unknown".
+
+- Every option is derived at build time from the EXIF already in the manifest — **no camera or lens name is hard-coded**, and the manifest is untouched. A dimension with fewer than two values is left out, and with no dimension left the panel isn't rendered at all.
+- A built-in lens's verbose name is tidied into a readable label, e.g. `iPhone 15 Pro back triple camera 6.765mm f/1.78` becomes `iPhone 15 Pro 24mm ƒ/1.78` (the physical focal length is swapped for the 35mm equivalent that lens was most often shot at); interchangeable lens names are kept verbatim.
+- The selection lives in the URL (`/gallery/?camera=…&lens=…&focal=24-35,36-70`), so a filtered view can be shared, and the lightbox skips photos the filter has hidden.
+- The panel is revealed by script; without JavaScript the page is the plain album list.
 
 ## 🧩 Branches
 

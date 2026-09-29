@@ -79,6 +79,22 @@ export interface GalleryPhoto {
   type?: "video";
   /** Video duration in seconds, shown as a badge on the grid item. */
   duration?: number;
+  /** Filter slugs for the /gallery facets; absent when it has none of them. */
+  facets?: GalleryPhotoFacets;
+}
+
+/**
+ * URL-safe slugs placing a photo in each filter dimension (see
+ * `src/utils/galleryFacets.ts`). A key is omitted when the photo lacks that
+ * dimension, so the client can offer an "unknown" choice for it.
+ */
+export interface GalleryPhotoFacets {
+  /** Normalized camera name, slugified */
+  camera?: string;
+  /** Raw lens string, slugified */
+  lens?: string;
+  /** 35mm-equivalent focal bucket, e.g. "24-35" */
+  focal?: string;
 }
 
 /** A group of photos belonging to one post, linked back to the post. */
@@ -87,6 +103,8 @@ export interface GalleryAlbum {
     title: string;
     url: string;
     date: Date;
+    /** Locale-independent post slug, e.g. "japan-travel" — the album's anchor */
+    slug: string;
   };
   photos: GalleryPhoto[];
 }

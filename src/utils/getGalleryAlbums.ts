@@ -5,10 +5,17 @@ import type {
   GalleryManifest,
   GalleryPhoto,
 } from "@/types/gallery";
+import type { UIStrings } from "@/i18n/types";
 import { postFilter } from "./postFilter";
-import { getPostUrl } from "./getPostPaths";
+import { getPostSlug, getPostUrl } from "./getPostPaths";
 import { getAssetPath } from "./withBase";
 import { isVideoUrl, parseGalleryMarker, stripMarkdownCode } from "./media";
+import {
+  buildFacetGroups,
+  resolveFacets,
+  type FacetGroup,
+  type FacetSource,
+} from "./galleryFacets";
 import config from "@/config";
 
 /**
@@ -91,6 +98,25 @@ export function formatSettingsLine(exif: GalleryExif): string | undefined {
   if (exif.shutter) parts.push(`${exif.shutter}s`);
   if (exif.iso) parts.push(`ISO ${exif.iso}`);
   return parts.length ? parts.join(" · ") : undefined;
+}
+
+/** The EXIF a manifest entry contributes to the /gallery filter facets. */
+function getFacetSource(url: string): FacetSource {
+  const exif = manifest[url]?.exif;
+  if (!exif) return {};
+  return {
+    camera: normalizeCamera(exif),
+    lens: exif.lens?.trim() || undefined,
+    model: exif.model?.trim() || undefined,
+    focal35: exif.focal35,
+  };
+}
+
+/** Resolve facets over every item of the given albums, in album order. */
+function resolveAlbumFacets(albums: GalleryAlbum[]) {
+  return resolveFacets(
+    albums.flatMap(album => album.photos.map(p => getFacetSource(p.src)))
+  );
 }
 
 /** Build one item, joining the manifest entry (or falling back to the original). */
@@ -223,7 +249,7 @@ export function getGalleryAlbums(
   if (!gallery.enabled) return [];
   const domains = new Set(gallery.imageDomains);
 
-  return posts
+  const albums = posts
     .filter(postFilter)
     .sort(
       (a, b) =>
@@ -242,9 +268,52 @@ export function getGalleryAlbums(
           title: post.data.title,
           url: getPostUrl(post.id, post.filePath),
           date: new Date(post.data.pubDatetime),
+          slug: getPostSlug(post.id, post.filePath)
+            .replace(/^\//, "")
+            .replaceAll("/", "-"),
         },
         photos,
       } satisfies GalleryAlbum;
     })
     .filter((album): album is GalleryAlbum => album !== null);
+
+  // Flattening nested paths can collide ("a/b-c" vs "a-b/c"); album slugs
+  // become section ids, so suffix repeats in (date-sorted) album order.
+  const usedSlugs = new Set<string>();
+  for (const album of albums) {
+    const base = album.post.slug;
+    let slug = base;
+    for (let n = 2; usedSlugs.has(slug); n++) slug = `${base}-${n}`;
+    usedSlugs.add(slug);
+    album.post.slug = slug;
+  }
+
+  // Facet slugs depend on the whole collection (collision suffixes, the lens
+  // label's focal mode), so they are attached once every album exists.
+  const { items } = resolveAlbumFacets(albums);
+  let i = 0;
+  for (const album of albums) {
+    for (const photo of album.photos) {
+      const facets = items[i++];
+      if (facets) photo.facets = facets;
+    }
+  }
+  return albums;
+}
+
+/**
+ * The filter dimensions the /gallery page renders for these albums (as
+ * returned by `getGalleryAlbums`): only those with at least two known values.
+ * An empty result means the page shows no filter UI at all.
+ */
+export function getGalleryFacets(
+  albums: GalleryAlbum[],
+  t: UIStrings
+): FacetGroup[] {
+  const { labels } = resolveAlbumFacets(albums);
+  return buildFacetGroups(
+    albums.flatMap(album => album.photos.map(photo => photo.facets)),
+    labels,
+    t
+  );
 }

@@ -56,6 +56,30 @@ export interface UIStrings {
     searchTitle: string;
     searchDesc: string;
   };
+  gallery: {
+    albumsNav: string;
+    filter: string;
+    clear: string;
+    camera: string;
+    lens: string;
+    focal: string;
+    unknown: string;
+    /** Placeholders: {{photos}}, {{albums}} */
+    summaryAll: string;
+    /** `summaryAll` when there is exactly one album. Placeholders: {{photos}}, {{albums}} */
+    summaryAllOneAlbum: string;
+    /** Placeholders: {{shown}}, {{total}} */
+    summaryFiltered: string;
+    /** Placeholder: {{summary}} (the summary text that follows the notice) */
+    filtersReset: string;
+    noMatch: string;
+    focalUltraWide: string;
+    focalWide: string;
+    focalStandard: string;
+    focalShortTele: string;
+    focalTele: string;
+    focalSuperTele: string;
+  };
   a11y: {
     skipToContent: string;
     openMenu: string;

@@ -1,7 +1,10 @@
 ---
 import type { GalleryAlbum } from "@/types/gallery";
-import { useTranslations } from "@/i18n";
+import { tplStr, useTranslations } from "@/i18n";
 import { formatDuration } from "@/utils/media";
+import { getGalleryFacets } from "@/utils/getGalleryAlbums";
+import { UNKNOWN_FACET } from "@/utils/galleryFacets";
+import IconFilter from "@/assets/icons/IconFilter.svg";
 import config from "@/config";
 
 interface Props {
@@ -28,6 +31,29 @@ const pswpStrings = JSON.stringify({
   error: t.a11y.lightboxError,
   videoError: t.a11y.lightboxVideoError,
 });
+
+// Filter dimensions derived from the photos' EXIF; none → no filter UI.
+const facetGroups = getGalleryFacets(albums, t);
+const photoCount = albums.reduce((n, album) => n + album.photos.length, 0);
+const summaryAll = tplStr(
+  albums.length === 1 ? t.gallery.summaryAllOneAlbum : t.gallery.summaryAll,
+  { photos: photoCount, albums: albums.length }
+);
+
+// Summary / announcement templates, filled in by the client filter script.
+const filterStrings = JSON.stringify({
+  summaryAll: t.gallery.summaryAll,
+  summaryAllOneAlbum: t.gallery.summaryAllOneAlbum,
+  summaryFiltered: t.gallery.summaryFiltered,
+  filtersReset: t.gallery.filtersReset,
+});
+
+const chipClass = [
+  "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors",
+  "border-border text-foreground hover:border-accent hover:text-accent",
+  "aria-pressed:border-accent aria-pressed:bg-accent/10 aria-pressed:text-accent",
+  "data-empty:opacity-40",
+];
 ---
 
 {
@@ -37,8 +63,133 @@ const pswpStrings = JSON.stringify({
     </p>
   ) : (
     <div class="gallery" data-pswp-strings={pswpStrings}>
+      {facetGroups.length > 0 && (
+        <div
+          class="g-filter mb-8"
+          data-gallery-filter
+          data-filter-strings={filterStrings}
+          hidden
+        >
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <button
+              type="button"
+              class="hover:text-accent aria-expanded:text-accent inline-flex min-h-8 items-center gap-1.5 text-sm font-medium transition-colors"
+              aria-expanded="false"
+              aria-controls="g-filter-panel"
+              data-filter-toggle
+            >
+              <IconFilter class="size-4" aria-hidden="true" />
+              {t.gallery.filter}
+            </button>
+            <p
+              class="text-muted-foreground text-sm tabular-nums"
+              aria-live="polite"
+              data-filter-summary
+            >
+              {summaryAll}
+            </p>
+            <button
+              type="button"
+              class="text-muted-foreground hover:text-accent inline-flex min-h-8 items-center text-sm underline decoration-dashed decoration-1 underline-offset-4 transition-colors"
+              data-filter-clear
+              hidden
+            >
+              {t.gallery.clear}
+            </button>
+          </div>
+          <div
+            id="g-filter-panel"
+            class="border-border mt-2 flex flex-col gap-3 border-t pt-3"
+            data-filter-panel
+            hidden
+          >
+            {albums.length >= 2 && (
+              <nav
+                class="g-albums flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-4"
+                aria-labelledby="g-facet-albums"
+              >
+                <span
+                  id="g-facet-albums"
+                  class="text-muted-foreground shrink-0 text-xs sm:w-20"
+                >
+                  {t.gallery.albumsNav}
+                </span>
+                <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                  {albums.map(album => (
+                    <li>
+                      <a
+                        href={`#album-${album.post.slug}`}
+                        class="text-foreground hover:text-accent inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap transition-colors aria-disabled:opacity-40"
+                      >
+                        {album.post.title}
+                        <span
+                          class="text-muted-foreground tabular-nums"
+                          data-album-count
+                        >
+                          {album.photos.length}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+            {facetGroups.map(group => (
+              <div
+                role="group"
+                aria-labelledby={`g-facet-${group.key}`}
+                class="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-4"
+              >
+                <span
+                  id={`g-facet-${group.key}`}
+                  class="text-muted-foreground shrink-0 text-xs sm:w-20"
+                >
+                  {t.gallery[group.key]}
+                </span>
+                <div class="flex flex-wrap gap-1.5">
+                  {group.options.map(option => (
+                    <button
+                      type="button"
+                      class:list={chipClass}
+                      aria-pressed="false"
+                      data-facet={group.key}
+                      data-value={option.value}
+                    >
+                      {option.label}
+                      <span class="tabular-nums opacity-60" data-count>
+                        {option.count}
+                      </span>
+                    </button>
+                  ))}
+                  {group.unknown > 0 && (
+                    <button
+                      type="button"
+                      class:list={chipClass}
+                      aria-pressed="false"
+                      data-facet={group.key}
+                      data-value={UNKNOWN_FACET}
+                    >
+                      {t.gallery.unknown}
+                      <span class="tabular-nums opacity-60" data-count>
+                        {group.unknown}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p
+            class="text-muted-foreground py-16 text-center italic"
+            data-filter-empty
+            hidden
+          >
+            {t.gallery.noMatch}
+          </p>
+        </div>
+      )}
       {albums.map(album => (
-        <section class="mb-12">
+        <section id={`album-${album.post.slug}`} class="mb-12 scroll-mt-6">
           <div class="g-head mb-3 flex items-baseline justify-between gap-4">
             <h2 class="text-lg font-medium">
               <a
@@ -77,6 +228,9 @@ const pswpStrings = JSON.stringify({
                 }
                 data-exif-camera={photo.camera ?? ""}
                 data-exif-settings={photo.settings ?? ""}
+                data-f-camera={photo.facets?.camera}
+                data-f-lens={photo.facets?.lens}
+                data-f-focal={photo.facets?.focal}
               >
                 {photo.thumbSrc && (
                   <img
@@ -127,6 +281,7 @@ const pswpStrings = JSON.stringify({
      monitors) and re-center themselves, so titles/dates hug the grid edges;
      the page title/description above stay at the regular content width. */
   .g-head,
+  .g-filter,
   .g-grid {
     --g-wide: max(100%, min(80vw, 100rem));
     width: var(--g-wide);
@@ -144,9 +299,23 @@ const pswpStrings = JSON.stringify({
   /* Album-app feel on phones: photo rows bleed to the screen edges by
      cancelling the page's 1rem side padding; titles/dates stay padded. */
   @media (width < 40rem) {
-    .g-head {
+    .g-head,
+    .g-filter {
       width: 100%;
       margin-inline: 0;
+    }
+    /* The album index becomes one swipeable row instead of a tall list. */
+    .g-albums ul {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      /* A scroller clips at its padding box; leave room for the links'
+         focus outline, and cancel the padding so nothing shifts. */
+      padding: 0.25rem;
+      margin: -0.25rem;
+    }
+    .g-albums ul::-webkit-scrollbar {
+      display: none;
     }
     .g-grid {
       width: calc(100% + 2rem);
@@ -284,6 +453,7 @@ const pswpStrings = JSON.stringify({
   import type PhotoSwipeLightbox from "photoswipe/lightbox";
   import { createViewer, parseViewerStrings } from "@/scripts/photoViewer";
   import { onPageReady } from "@/scripts/onPageReady";
+  import { initGalleryFilter } from "@/scripts/galleryFilter";
 
   let lightbox: PhotoSwipeLightbox | null = null;
 
@@ -300,15 +470,19 @@ const pswpStrings = JSON.stringify({
 
     lightbox = createViewer(
       {
-        // Each `.g-grid` is an independent album; arrows stay within one album.
+        // Each `.g-grid` is an independent album; arrows stay within one album
+        // and skip items the filter has hidden (the selector is re-run on
+        // every open, so no re-init is needed when the filter changes).
         gallery: ".g-grid",
-        children: "a.g-item",
+        children: "a.g-item:not([hidden])",
       },
       parseViewerStrings(
         document.querySelector<HTMLElement>("[data-pswp-strings]")
       )
     );
     lightbox.init();
+
+    initGalleryFilter();
   }
 
   onPageReady(initGallery);
