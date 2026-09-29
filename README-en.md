@@ -141,6 +141,26 @@ features: {
 
 Per post, frontmatter overrides it: `toc: false` hides it, `toc: true` shows it even below the threshold. A remark-toc "Table of contents" / "目录" heading in the body is never listed.
 
+### Reading time
+
+Post cards and the post header show an estimated reading time after the date ("5 min read"). CJK characters (~400/min) and Latin words (~230/min) are counted separately and added up, so a Chinese post full of English terms is estimated as fairly as an English one; code blocks, math, URLs and markup don't count. `gallery: true` posts show none. Turn it off with `features.readingTime: false`.
+
+### Related posts
+
+At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. The `others` tag that untagged posts get by default doesn't count. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
+
+### Share links
+
+The share row under each post starts with a "Copy link" button (on devices with a system share sheet it opens that instead), followed by `shareLinks` from `astro-paper.config.ts`. In a share URL, `{url}` and `{title}` are replaced by the post's URL and title, both URL-encoded; a URL with neither placeholder gets the post URL appended, as before:
+
+```ts
+shareLinks: [
+  { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+  { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" }, // URL appended
+  { name: "mail", url: "mailto:?subject={title}&body={url}" },
+],
+```
+
 ## 📸 Photo Gallery
 
 The `/gallery` page collects image-host photos straight from your posts' bodies. There's **no separate image list to maintain** — the photos come from the `![alt](url)` links already in your travelogues.

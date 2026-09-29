@@ -24,6 +24,15 @@ export interface UIStrings {
     copyCode: string;
     codeCopied: string;
     copyFailed: string;
+    /** Placeholder: {{n}} (minutes) */
+    readingTime: string;
+    relatedPosts: string;
+    copyLink: string;
+    shareLink: string;
+    linkCopied: string;
+    copyLinkFailed: string;
+    /** Name of the tag filter group in search results. */
+    tagFilter: string;
   };
   pagination: {
     prev: string;

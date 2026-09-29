@@ -26,6 +26,13 @@ export default {
     copyCode: "Copy",
     codeCopied: "Copied",
     copyFailed: "Copy failed",
+    readingTime: "{{n}} min read",
+    relatedPosts: "Related posts",
+    copyLink: "Copy link",
+    shareLink: "Share link",
+    linkCopied: "Link copied",
+    copyLinkFailed: "Couldn't copy — use the address bar",
+    tagFilter: "Tag",
   },
   pagination: {
     prev: "Prev",

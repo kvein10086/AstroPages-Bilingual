@@ -145,6 +145,26 @@ features: {
 
 单篇文章可用 frontmatter 覆盖：`toc: false` 不显示，`toc: true` 即使标题不足也显示。正文里 remark-toc 使用的「Table of contents」/「目录」标题不会进入目录。
 
+### 阅读时长
+
+文章卡片和文章页头会在日期后显示预计阅读时长（「约 5 分钟」）。中日韩文字（约 400 字/分钟）和拉丁单词（约 230 词/分钟）分别计数再相加，夹杂大量英文术语的中文文章也能估得准；代码块、公式、链接地址和标签不计入。`gallery: true` 的文章不显示。用 `features.readingTime: false` 关闭。
+
+### 相关文章
+
+每篇文章末尾会列出同一语言中共同标签最多的至多三篇文章（同分时较新的在前）。标签按 slug 比较，`Photography` 与 `photography` 视为同一个。未写标签的文章默认得到的 `others` 标签不参与匹配。标签与其他文章都不重合时不显示。用 `features.relatedPosts: false` 关闭。
+
+### 分享链接
+
+文章末尾的分享栏以「复制链接」按钮开头（在有系统分享面板的设备上改为调起分享面板），后面是 `astro-paper.config.ts` 中的 `shareLinks`。分享地址里的 `{url}` 和 `{title}` 会替换成文章的地址和标题（均已 URL 编码）；两个占位符都没写时，沿用旧行为，把文章地址拼接在末尾：
+
+```ts
+shareLinks: [
+  { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+  { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" }, // 末尾拼接地址
+  { name: "mail", url: "mailto:?subject={title}&body={url}" },
+],
+```
+
 ## 📸 照片相册
 
 `/gallery` 页面把文章正文里的图床照片汇集成相册。它**不依赖单独维护的图片清单**——照片直接来自游记正文的 `![alt](url)` 外链。
