@@ -113,11 +113,17 @@ function initScrollChrome(signal: AbortSignal) {
   );
   const progressIndicator = document.getElementById("progress-indicator");
 
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   backToTopBtn?.addEventListener(
     "click",
     () => {
-      document.body.scrollTop = 0;
-      root.scrollTop = 0;
+      // Decided here rather than left to `<html>`'s scroll-behavior, so
+      // reduced motion holds whatever the page CSS says: from the end of a
+      // long post this is tens of thousands of pixels of motion.
+      window.scrollTo({
+        top: 0,
+        behavior: reduceMotion.matches ? "instant" : "smooth",
+      });
     },
     { signal }
   );
@@ -141,6 +147,8 @@ function initScrollChrome(signal: AbortSignal) {
       btnContainer.classList.toggle("translate-y-0", visible);
       btnContainer.classList.toggle("opacity-0", !visible);
       btnContainer.classList.toggle("translate-y-14", !visible);
+      // Hidden means gone: no taps, no Tab stop, nothing in the a11y tree.
+      btnContainer.inert = !visible;
       lastVisible = visible;
     }
   }
