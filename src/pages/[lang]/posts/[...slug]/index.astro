@@ -157,7 +157,12 @@ const ogImage = ogImageUrl
       {title}
     </h1>
 
-    <div class="my-2 flex items-center gap-2">
+    {
+      /* Not indexed as body text: search results show the date from the
+      metadata below, and it shouldn't open every excerpt. The ignore still
+      lets Pagefind read that metadata and sort key. */
+    }
+    <div class="my-2 flex items-center gap-2" data-pagefind-ignore>
       <Datetime
         {pubDatetime}
         {modDatetime}
@@ -178,7 +183,7 @@ const ogImage = ogImageUrl
       <EditPost {hideEditPost} {post} class="max-sm:hidden" />
     </div>
 
-    <!-- Positioning context for the TOC rail, which hangs off its end edge. -->
+    {/* Positioning context for the TOC rail, which hangs off its end edge. */}
     <div class="relative mt-8">
       {postToc && <PostToc {...postToc} />}
       <article
