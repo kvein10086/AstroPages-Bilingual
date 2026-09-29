@@ -14,9 +14,12 @@
     "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
 }
 
-/* Light theme values */
+/* Light theme values. `color-scheme` tells the browser which way to draw what
+   it paints itself — scrollbars, form controls, the search clear button,
+   autofill — so they follow the theme too. */
 :root,
 [data-theme="light"] {
+  color-scheme: light;
   --background: #fdfdfd;
   --foreground: #282728;
   --accent: #006cac;
@@ -28,6 +31,7 @@
 
 /* Dark theme values */
 [data-theme="dark"] {
+  color-scheme: dark;
   --background: #212737;
   --foreground: #eaedf3;
   --accent: #ff6b01;
