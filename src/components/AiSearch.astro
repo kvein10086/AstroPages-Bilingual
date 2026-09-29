@@ -1,0 +1,154 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+
+// Optional semantic-search panel for the Pagefind search page (see
+// `features.aiSearch`). Renders nothing unless an endpoint is configured, and
+// the search pages only render it at all when one is — Astro emits a
+// component's <script> wherever the component renders and bundles a regular
+// <style> into the page CSS just for being imported, so the styles below are
+// `is:inline` and the whole feature leaves no trace in the build when off.
+//
+// The panel itself is built client-side by `src/scripts/aiSearch.ts`, which
+// re-reads the config below on every page load: it deliberately sits outside
+// the `transition:persist` Pagefind container, whose data-* would go stale.
+const aiSearch = config.features.aiSearch;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+
+// Absolute URL of this locale's posts index; the crawler keys every chunk by
+// its page URL, so a range filter on it keeps results to this locale's posts.
+const postsPrefix = aiSearch
+  ? new URL(
+      getRelativeLocaleUrl(locale, "posts/"),
+      config.site.url
+    ).href.replace(/\/*$/, "/")
+  : "";
+---
+
+{
+  aiSearch && (
+    <div
+      id="ai-search-config"
+      hidden
+      data-endpoint={aiSearch.endpoint}
+      data-prefix={postsPrefix}
+      data-origin={new URL(config.site.url).origin}
+      data-title-suffix={` | ${config.site.title}`}
+      data-timeout-ms={aiSearch.timeoutMs}
+      data-max-results={aiSearch.maxResults}
+      data-match-threshold={aiSearch.matchThreshold}
+      data-label={t.pages.searchAiTitle}
+      data-loading={t.pages.searchAiLoading}
+      data-note={t.pages.searchAiNote}
+    />
+  )
+}
+
+<script>
+  import { onPageReady } from "@/scripts/onPageReady";
+  import { initAiSearch } from "@/scripts/aiSearch";
+
+  onPageReady(initAiSearch);
+</script>
+
+<style is:inline>
+  /* Mirrors the Pagefind result overrides in the search pages. */
+  #ai-search-panel {
+    --ai-search-scale: var(--pagefind-ui-scale, 0.8);
+    margin-top: calc(20px * var(--ai-search-scale));
+    color: var(--foreground);
+    font-family: var(--font-app);
+  }
+
+  #ai-search-panel .ai-search__label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+
+  #ai-search-panel .ai-search__status {
+    margin: calc(12px * var(--ai-search-scale)) 0 0;
+    font-size: calc(16px * var(--ai-search-scale));
+    color: var(--muted-foreground);
+  }
+
+  #ai-search-panel .ai-search__results {
+    margin: calc(8px * var(--ai-search-scale)) 0 0;
+    padding: 0;
+    list-style: none;
+    transition: opacity 150ms;
+  }
+
+  #ai-search-panel .ai-search__results[aria-busy="true"] {
+    opacity: 0.6;
+  }
+
+  #ai-search-panel .ai-search__result {
+    padding: calc(16px * var(--ai-search-scale)) 0
+      calc(20px * var(--ai-search-scale));
+    border-top: 1px solid var(--border);
+  }
+
+  #ai-search-panel .ai-search__result:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+
+  #ai-search-panel .ai-search__title {
+    margin: 0;
+    font-size: calc(21px * var(--ai-search-scale));
+    font-weight: 700;
+  }
+
+  #ai-search-panel .ai-search__title a {
+    color: var(--accent);
+    text-decoration: none;
+    text-decoration-style: dashed;
+    text-underline-offset: 4px;
+    outline-offset: 1px;
+    outline-color: var(--accent);
+  }
+
+  #ai-search-panel .ai-search__title a:hover {
+    text-decoration-line: underline;
+  }
+
+  #ai-search-panel .ai-search__title a:focus-visible {
+    outline-width: 2px;
+    outline-style: dashed;
+  }
+
+  #ai-search-panel .ai-search__section {
+    margin: calc(4px * var(--ai-search-scale)) 0 0;
+    font-size: calc(14px * var(--ai-search-scale));
+    color: var(--muted-foreground);
+  }
+
+  #ai-search-panel .ai-search__excerpt {
+    margin: calc(4px * var(--ai-search-scale)) 0 0;
+    font-size: calc(16px * var(--ai-search-scale));
+    overflow-wrap: anywhere;
+  }
+
+  /* Screen-reader-only status (loading, result count); never hidden. */
+  #ai-search-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #ai-search-panel .ai-search__note {
+    margin: calc(8px * var(--ai-search-scale)) 0 0;
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+  }
+</style>

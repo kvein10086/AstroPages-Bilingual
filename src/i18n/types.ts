@@ -74,6 +74,9 @@ export interface UIStrings {
 
     searchTitle: string;
     searchDesc: string;
+    searchAiTitle: string;
+    searchAiLoading: string;
+    searchAiNote: string;
   };
   gallery: {
     albumsNav: string;

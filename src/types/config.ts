@@ -60,6 +60,27 @@ interface FeaturesConfig {
    */
   search?: "pagefind" | false;
   /**
+   * Optional semantic-search panel on the search page, backed by the public
+   * endpoint of a Cloudflare AI Search instance, e.g.
+   * "https://<id>.search.ai.cloudflare.com". Only its `/search` route is used,
+   * and only on the Pagefind search page: Pagefind keeps answering instantly
+   * and remains the fallback whenever the semantic side fails or times out.
+   * Off unless an endpoint is set here or via the `PUBLIC_AI_SEARCH_URL` env
+   * var; `false` turns it off even when the env var is set.
+   */
+  aiSearch?:
+    | {
+        /** Public endpoint URL; overrides `PUBLIC_AI_SEARCH_URL`. */
+        endpoint?: string;
+        /** Give up on a request after this many ms. Defaults to 5000. */
+        timeoutMs?: number;
+        /** Posts listed in the panel. Defaults to 5. */
+        maxResults?: number;
+        /** Minimum vector similarity (0–1) a chunk needs. Defaults to 0.4. */
+        matchThreshold?: number;
+      }
+    | false;
+  /**
    * Photo gallery page (/gallery) collecting media from posts' bodies.
    * A post's `gallery` frontmatter flag is its DEFAULT state — `true` selects
    * its media, unset leaves it out — and either can be overridden per image by
@@ -178,10 +199,22 @@ type ResolvedSiteConfig = Required<
 > &
   Pick<SiteConfig, "profile" | "googleVerification">;
 
+type ResolvedAiSearchConfig = Required<
+  Exclude<NonNullable<FeaturesConfig["aiSearch"]>, false>
+>;
+
+type ResolvedFeaturesConfig = Required<
+  Omit<FeaturesConfig, "aiSearch" | "toc">
+> & {
+  /** `false` when no endpoint is configured. */
+  aiSearch: ResolvedAiSearchConfig | false;
+  toc: ResolvedTocConfig;
+};
+
 export interface ResolvedAstroPaperConfig {
   site: ResolvedSiteConfig;
   posts: Required<PostsConfig>;
-  features: Required<Omit<FeaturesConfig, "toc">> & { toc: ResolvedTocConfig };
+  features: ResolvedFeaturesConfig;
   socials: SocialLink[];
   shareLinks: ShareLink[];
 }

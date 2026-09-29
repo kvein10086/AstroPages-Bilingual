@@ -1,5 +1,9 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
+// Keep above PagefindSearch, which pulls in the Pagefind CSS: importing it
+// later renames the shared CSS chunk, so the built page would change even
+// with the feature off.
+import AiSearch from "@/components/AiSearch.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
@@ -41,6 +45,7 @@ const t = useTranslations(locale);
       )
     }
     <PagefindSearch />
+    {config.features.aiSearch && <AiSearch />}
   </Main>
 
   <Footer />
