@@ -1,5 +1,8 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
+// Keep above the Pagefind CSS: importing it later renames the shared CSS
+// chunk, so the built page would change even with the feature off.
+import AiSearch from "@/components/AiSearch.astro";
 import "@pagefind/default-ui/css/ui.css";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
@@ -44,6 +47,7 @@ const t = useTranslations(locale);
       data-bundle-path={pagefindBundlePath}
     >
     </div>
+    {config.features.aiSearch && <AiSearch />}
   </Main>
 
   <Footer />
@@ -58,6 +62,12 @@ const t = useTranslations(locale);
 
     const bundlePath = pageFindSearch?.dataset?.bundlePath;
     if (!bundlePath) return;
+
+    // Both this page's top-level call and a previous page's after-swap
+    // listener can reach here for the same container (zh <-> en switch);
+    // claim it synchronously so only one Pagefind UI is created.
+    if (pageFindSearch.dataset.pfInit) return;
+    pageFindSearch.dataset.pfInit = "1";
 
     const params = new URLSearchParams(window.location.search);
 

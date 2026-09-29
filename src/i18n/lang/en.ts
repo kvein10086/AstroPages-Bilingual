@@ -58,6 +58,10 @@ export default {
 
     searchTitle: "Search",
     searchDesc: "A few words to find it again.",
+    searchAiTitle: "Related by meaning",
+    searchAiLoading: "Searching by meaning...",
+    searchAiNote:
+      "Semantic results come from Cloudflare AI Search; your query is sent to Cloudflare.",
   },
   gallery: {
     albumsNav: "Albums",

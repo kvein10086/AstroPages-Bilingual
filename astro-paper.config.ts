@@ -33,6 +33,10 @@ export default defineAstroPaperConfig({
       url: "https://github.com/t0saki/AstroPages-Bilingual/edit/main/",
     },
     search: "pagefind",
+    // Semantic results from Cloudflare AI Search above the Pagefind ones. Off
+    // unless an endpoint is set here or via PUBLIC_AI_SEARCH_URL; Pagefind
+    // stays the fallback. Setup steps are in the README.
+    // aiSearch: { endpoint: "https://<id>.search.ai.cloudflare.com" },
     gallery: {
       enabled: true,
       imageDomains: ["upload.wikimedia.org"],

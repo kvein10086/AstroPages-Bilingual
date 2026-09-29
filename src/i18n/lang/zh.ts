@@ -58,6 +58,10 @@ export default {
 
     searchTitle: "搜索",
     searchDesc: "用几个字，找回一篇文章。",
+    searchAiTitle: "语义相关",
+    searchAiLoading: "正在按语义查找……",
+    searchAiNote:
+      "语义结果由 Cloudflare AI Search 提供，查询内容会发送给 Cloudflare。",
   },
   gallery: {
     albumsNav: "相册",
