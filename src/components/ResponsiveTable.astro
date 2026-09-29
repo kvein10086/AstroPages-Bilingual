@@ -28,7 +28,19 @@ const variantClasses = {
     className,
   ]}
 >
-  <div class="relative w-full overflow-x-auto">
+  {
+    /* The scroller shares `.table-wrap` with the wrapper rehypeTableWrap puts
+    around plain markdown tables (which skips tables inside this component),
+    so both are keyboard-scrollable with the same focus ring. The outer
+    `overflow-hidden` box shapes the rest: it would clip a ring drawn outside
+    the scroller, so the ring is drawn inset, and it would stop the wrapper's
+    margins from collapsing into the neighbouring paragraphs', so `my-0` keeps
+    this component's flush spacing. */
+  }
+  <div
+    class="table-wrap relative my-0 w-full overflow-x-auto focus-visible:-outline-offset-2"
+    tabindex="0"
+  >
     <slot />
   </div>
 </div>

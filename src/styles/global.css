@@ -143,3 +143,238 @@
   font-size: 0.78rem;
   opacity: 0.8;
 }
+
+/* ===== Post table of contents =====
+   Skin for the non-utility parts of PostToc.astro: the rail's fade masks and
+   the sheet, a native <dialog> in the top layer. Behaviour lives in
+   src/scripts/postToc.ts. */
+
+/* The rail scrolls on its own once it outgrows the viewport; fade whichever
+   end has links hidden past it (`data-fade` is kept current by the script).
+   The fades are the scroll cue: a classic scrollbar would stand as one more
+   vertical line beside the track and the page's own, and take its width out
+   of the labels. */
+[data-toc-scroll] {
+  scrollbar-width: none;
+  --toc-fade: 1.5rem;
+}
+[data-toc-scroll]::-webkit-scrollbar {
+  display: none;
+}
+[data-toc-scroll][data-fade="top"] {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--toc-fade));
+}
+[data-toc-scroll][data-fade="bottom"] {
+  mask-image: linear-gradient(to top, transparent, #000 var(--toc-fade));
+}
+[data-toc-scroll][data-fade="both"] {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--toc-fade),
+    #000 calc(100% - var(--toc-fade)),
+    transparent
+  );
+}
+
+/* The page must not scroll behind the open sheet. Un-layered on purpose, so it
+   beats the `overflow-y-scroll` utility on <html>; the gutter keeps the page
+   from shifting sideways as the scrollbar goes. */
+@media screen {
+  html:has(dialog[data-toc-sheet][open]) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+}
+
+/* A section heading focused after a jump from the sheet (tabindex="-1") is a
+   reading position, not a control: no focus ring. */
+#article :is(h2, h3, h4, h5, h6)[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* Phones: a bottom sheet across the full width. Padding stays zero — the
+   script treats a click on the dialog box itself as a backdrop click. */
+.post-toc-sheet {
+  position: fixed;
+  inset-block: auto 0;
+  inset-inline: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(75dvh, 36rem);
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  border-block-end: 0;
+  border-start-start-radius: 1rem;
+  border-start-end-radius: 1rem;
+  background-color: var(--background);
+  color: var(--foreground);
+  box-shadow: 0 -8px 32px rgb(0 0 0 / 0.18);
+  transition:
+    opacity 0.2s ease-out,
+    translate 0.2s ease-out;
+}
+.post-toc-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+.post-toc-sheet::backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+  transition: opacity 0.2s ease-out;
+}
+
+/* Wider screens: a floating panel rising from the button (bottom-start). */
+@media (min-width: 40rem) {
+  .post-toc-sheet {
+    inset-block-end: calc(6rem + env(safe-area-inset-bottom));
+    inset-inline: 1rem auto;
+    width: min(24rem, 100% - 2rem);
+    max-height: min(70dvh, 32rem);
+    border-block-end: 1px solid
+      color-mix(in srgb, var(--foreground) 10%, transparent);
+    border-radius: 0.75rem;
+    box-shadow: 0 16px 48px rgb(0 0 0 / 0.22);
+  }
+}
+
+/* Entry: rise and fade in. */
+@starting-style {
+  .post-toc-sheet[open] {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+  .post-toc-sheet[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Exit: the reverse, where the top layer can be held open for it. Elsewhere
+   the sheet simply disappears. */
+@supports (overlay: auto) {
+  .post-toc-sheet,
+  .post-toc-sheet::backdrop {
+    transition-property: opacity, translate, overlay, display;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+  .post-toc-sheet:not([open]) {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+  .post-toc-sheet:not([open])::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Closed by a jump to a section: gone at once, see jumpFromSheet(). */
+.post-toc-sheet[data-instant],
+.post-toc-sheet[data-instant]::backdrop {
+  transition: none;
+}
+
+/* Printing with the sheet open: `.post-toc-sheet[open]` (un-layered) would
+   beat the layered `print:hidden` utility and print the panel over page 1.
+   No transition either, or the discrete `display` one keeps it for 0.2s. */
+@media print {
+  .post-toc-sheet,
+  .post-toc-sheet::backdrop {
+    display: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===== Reduced motion =====
+   One switch for every transition and animation on the site (the back-to-top
+   slide, the TOC panel, the theme icon spin, fades), so components need no
+   motion-reduce variants of their own. Durations are cut to a hair rather than removed so transitionend /
+   animationend still fire for any script waiting on them. In the base layer
+   with !important, which beats even !important utilities in later layers.
+   `*` doesn't reach ::view-transition-* pseudo-elements: page transitions
+   are left to Astro's ClientRouter, which handles reduced motion itself. */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ===== Print =====
+   A printout is the post on white paper: light colours whatever the screen
+   theme (the dark tokens are screen-only, see theme.css), no site chrome, and
+   code that wraps instead of being cut off at the page edge. Link URLs are
+   deliberately not printed after links — a post with a long reference list
+   would print every URL twice. Un-layered, so it wins over the layered base
+   and utility rules without !important. */
+@media print {
+  /* Rules keyed on [data-theme="dark"] rather than on the tokens. */
+  html[data-theme="dark"] .astro-code {
+    background-color: var(--shiki-light-bg);
+    color: var(--shiki-light);
+  }
+  html[data-theme="dark"] .astro-code span {
+    color: var(--shiki-light);
+  }
+  html.dark .callout[data-callout] {
+    --rc-color-dark: var(--rc-color-light);
+  }
+  .app-prose img {
+    background-color: transparent;
+  }
+
+  /* Site chrome and screen-only controls. */
+  #skip-to-content,
+  body > header,
+  body > footer,
+  div:has(> #back-button),
+  .progress-container,
+  #btt-btn-container,
+  .heading-link,
+  .copy-code {
+    display: none;
+  }
+
+  /* A post prints as its title, date line and article. Everything after —
+     edit link, tags, sharing, related and adjacent posts — is navigation for
+     the screen, as is the edit link (and its separator) in the date line. */
+  #main-content:has(#article) > :not(h1, h1 + div, :has(#article)),
+  #main-content:has(#article)
+    > h1
+    + div
+    > :is(a, [aria-hidden="true"]:has(+ a)) {
+    display: none;
+  }
+
+  /* Wrap long code lines — a scroll box prints only its visible part. Same
+     for the wide-table scroller that rehypeTableWrap adds. */
+  .astro-code {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .table-wrap {
+    overflow: visible;
+  }
+
+  pre,
+  table,
+  img,
+  video,
+  figure {
+    break-inside: avoid;
+  }
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    break-after: avoid;
+  }
+}

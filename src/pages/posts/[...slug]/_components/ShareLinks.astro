@@ -1,8 +1,17 @@
 ---
 import LinkButton from "@/components/LinkButton.astro";
+import IconLink from "@/assets/icons/IconLink.svg";
+import IconShare from "@/assets/icons/IconShare.svg";
+import IconCheck from "@/assets/icons/IconCheck.svg";
 import { tplStr, useTranslations } from "@/i18n";
 import config from "@/config";
 
+type Props = {
+  /** The post's title, for `{title}` in share URLs and the system share sheet. */
+  title: string;
+};
+
+const { title: postTitle } = Astro.props;
 const { shareLinks } = config;
 const t = useTranslations(Astro.currentLocale);
 
@@ -10,7 +19,23 @@ const icons = import.meta.glob<{
   default: (_props: Record<string, unknown>) => unknown;
 }>("/src/assets/icons/socials/*.svg");
 
-const pageUrl = encodeURIComponent(Astro.url.toString());
+const pageUrl = Astro.url.toString();
+
+/**
+ * A share URL from its configured template. `{url}` and `{title}` are filled
+ * in (both encoded — a CJK title must survive as a query value); a template
+ * with neither keeps the original behaviour of having the URL appended.
+ */
+const PLACEHOLDER_RE = /\{(url|title)\}/g;
+const shareHref = (template: string) => {
+  const values = {
+    url: encodeURIComponent(pageUrl),
+    title: encodeURIComponent(postTitle),
+  };
+  return template.match(PLACEHOLDER_RE)
+    ? template.replace(PLACEHOLDER_RE, (_, key: "url" | "title") => values[key])
+    : `${template}${values.url}`;
+};
 
 const platformLabel = (name: string) => {
   if (name === "qq") return "QQ";
@@ -26,20 +51,73 @@ const items = await Promise.all(
       (name === "mail"
         ? t.post.sharePostViaEmail
         : tplStr(t.post.sharePostOn, { platform: platformLabel(name) }));
-    return { url, title, Icon, iconStyle };
+    return { href: shareHref(url), title, Icon, iconStyle };
   })
 );
+
+/*
+ * Markup notes:
+ * - No configured share links, no share block — the copy button included, so
+ *   `shareLinks: []` still removes the whole row as it always did.
+ * - The copy button copies the link, or opens the system share sheet where
+ *   there is one (src/scripts/shareLink.ts). It can do neither without script,
+ *   so it stays `hidden` until the script has wired it up.
+ * - The `role="status"` line shows and announces the copy result. It hangs
+ *   below the whole share block, out of flow, so showing it never pushes the
+ *   page around. It spans the block (the content column), not the icon row:
+ *   the row shrinks to its icons, and a message measured against it wraps
+ *   into the divider below. One line of it fits the gap above that divider.
+ */
+const iconClass =
+  "size-6 scale-125 opacity-90 sm:scale-110 fill-transparent stroke-current stroke-2";
 ---
 
 {
   items.some(({ Icon }) => Icon) && (
-    <div class="flex flex-none flex-col items-center justify-center gap-1 md:items-start">
-      <span class="italic">{t.post.sharePostIntro}</span>
-      <div class="text-center">
-        {items.map(({ url, title, Icon, iconStyle }) =>
+    <div
+      data-pagefind-ignore
+      class="relative flex flex-none flex-col items-center justify-center gap-1 md:items-start"
+    >
+      <span>{t.post.sharePostIntro}</span>
+      <div class="text-center md:text-start">
+        <button
+          type="button"
+          hidden
+          data-share-link
+          data-url={pageUrl}
+          data-title={postTitle}
+          data-label-share={t.post.shareLink}
+          data-label-copied={t.post.linkCopied}
+          data-label-failed={t.post.copyLinkFailed}
+          title={t.post.copyLink}
+          class="group hover:text-accent inline-flex scale-90 items-center gap-1 p-2 hover:rotate-6 sm:p-1"
+        >
+          <IconLink
+            class:list={[
+              iconClass,
+              "inline-block group-data-[icon=check]:hidden group-data-[icon=share]:hidden",
+            ]}
+          />
+          <IconShare
+            class:list={[
+              iconClass,
+              "hidden group-data-[icon=share]:inline-block",
+            ]}
+          />
+          <IconCheck
+            class:list={[
+              iconClass,
+              "text-accent hidden group-data-[icon=check]:inline-block",
+            ]}
+          />
+          <span class="sr-only" data-share-link-label>
+            {t.post.copyLink}
+          </span>
+        </button>
+        {items.map(({ href, title, Icon, iconStyle }) =>
           Icon ? (
             <LinkButton
-              href={`${url}${pageUrl}`}
+              href={href}
               class="scale-90 p-2 hover:rotate-6 sm:p-1"
               title={title}
               target="_blank"
@@ -57,6 +135,18 @@ const items = await Promise.all(
           ) : null
         )}
       </div>
+      <p
+        role="status"
+        data-share-status
+        class="text-muted-foreground absolute inset-x-0 top-full mt-1 text-center text-sm md:text-start"
+      />
     </div>
   )
 }
+
+<script>
+  import { initShareLink } from "@/scripts/shareLink";
+  import { onPageReady } from "@/scripts/onPageReady";
+
+  onPageReady(initShareLink);
+</script>

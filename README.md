@@ -23,6 +23,7 @@
 - **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引；可选叠加 Cloudflare AI Search 语义结果（见 [语义搜索](#-语义搜索可选)）。
 - **数学公式**：Markdown 内嵌 LaTeX 公式，构建期由 [KaTeX](https://katex.org/) 渲染（remark-math + rehype-katex），无需客户端 JS。
 - **照片相册**：`/gallery` 页汇集设置了 `gallery: true` 的文章中的图床照片，按文章分组，悬停显示 EXIF（机型/镜头/参数），点击进 [PhotoSwipe](https://photoswipe.com/) 灯箱。可按相机、镜头、焦段筛选。缩略图与 EXIF 由脚本预生成入库（见 [照片相册](#-照片相册)）。**视频同样支持**：链接指向 `.mp4`/`.webm`/`.mov`/`.m4v` 即可，正文渲染成内联播放器，相册页收进一格带播放角标的画面。
+- **文章目录**：标题足够多的文章自动生成目录——宽屏（≥1280px）在正文右侧常驻并随阅读位置高亮，窄屏收进左下角的浮动按钮，点开是一张目录面板（见 [文章目录](#文章目录)）。
 - **SEO 优化**：预配置多语言 Meta 标签、Sitemap 与 OpenGraph。
 
 ## 🛠️ 快速开始
@@ -121,6 +122,48 @@ pnpm dev
 在 `src/content/posts/zh/` 或 `src/content/posts/en/` 中直接创建 Markdown/MDX 文件即可。**目录前缀即语言**：`zh/` 下的文章生成 `/posts/<slug>`，`en/` 下的文章生成 `/en/posts/<slug>`。两种语言使用相同的 `slug` 即可在语言切换时一一对应。
 
 （在 `keystatic-workers` 分支上，也可以通过 `/keystatic` 可视化编辑。）
+
+### 中英混排
+
+英文页面会启用字体的比例宽度（`pwid`），让弯引号、撇号和破折号按西文宽度排版。英文文章里如果夹了一段中文，其中的全角逗号和括号也会被压成西文宽度。给这段中文标上语言即可恢复全角：
+
+```md
+The sign read <span lang="zh">所有内容，均为生成。</span>
+```
+
+中文文章不受影响，里面的英文照常书写。
+
+### 文章目录
+
+文章里的 h2–h3 标题达到 3 个时，自动生成目录：宽屏（≥1280px）显示在正文右侧、随滚动高亮当前小节；窄屏则是左下角的浮动按钮，点开一张可跳转的目录面板。公式、行内代码、链接等标题会显示成干净的纯文本。阈值与深度在 `astro-paper.config.ts` 中调整：
+
+```ts
+features: {
+  toc: { enabled: true, minHeadings: 3, maxDepth: 3 }, // enabled: false 全站关闭
+},
+```
+
+单篇文章可用 frontmatter 覆盖：`toc: false` 不显示，`toc: true` 即使标题不足也显示。正文里 remark-toc 使用的「Table of contents」/「目录」标题不会进入目录。
+
+### 阅读时长
+
+文章卡片和文章页头会在日期后显示预计阅读时长（「约 5 分钟」）。中日韩文字（约 400 字/分钟）和拉丁单词（约 230 词/分钟）分别计数再相加，夹杂大量英文术语的中文文章也能估得准；代码块、公式、链接地址和 HTML 标记不计入。`gallery: true` 的文章不显示。用 `features.readingTime: false` 关闭。
+
+### 相关文章
+
+每篇文章末尾会列出同一语言中共同标签最多的至多三篇文章（同分时较新的在前）。标签按 slug 比较，`Photography` 与 `photography` 视为同一个。未写标签的文章默认得到的 `others` 标签不参与匹配。标签与其他文章都不重合时不显示。用 `features.relatedPosts: false` 关闭。
+
+### 分享链接
+
+文章末尾的分享栏以「复制链接」按钮开头（在有系统分享面板的设备上改为调起分享面板），后面是 `astro-paper.config.ts` 中的 `shareLinks`。分享地址里的 `{url}` 和 `{title}` 会替换成文章的地址和标题（均已 URL 编码）；两个占位符都没写时，沿用旧行为，把文章地址拼接在末尾：
+
+```ts
+shareLinks: [
+  { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+  { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" }, // 末尾拼接地址
+  { name: "mail", url: "mailto:?subject={title}&body={url}" },
+],
+```
 
 ## 📸 照片相册
 
@@ -263,7 +306,7 @@ pnpm build                   # 验证构建
 - `src/utils/getPostPaths.ts` — 从 slug 中剥离语言目录、按目录推断语言。
 - `src/pages/[lang]/**` — 英文路由树（上游为单语言，无此目录）。
 - `src/pages/**` 中各页的 `getCollection("posts", …)` — 增加了按语言（`zh/`）过滤。
-- `src/components/LanguageSwitcher.astro` + `src/layouts/Layout.astro` 的语言重定向脚本。
+- `src/components/LanguageSwitcher.astro` + `src/layouts/Layout.astro` 的语言重定向脚本，二者都依赖 `src/utils/resolveAlternate.ts`（判断各语言有哪些页面：新页面要在 `src/pages/` 和 `src/pages/[lang]/` 下都有路由文件，才会生成对应语言的链接和 `hreflang`）。
 - `src/styles/theme.css` 的 `--font-app`（中文字体栈）+ `src/layouts/Layout.astro` 的字体导入。
 - `_redirects`、`package.json`（部署相关依赖与脚本）。
 

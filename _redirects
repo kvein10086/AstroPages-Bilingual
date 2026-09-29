@@ -2,3 +2,10 @@
 # Legacy Chinese paths used a /zh/ prefix; Chinese now lives at the site root.
 /zh/*  /:splat  301
 /zh    /        301
+
+# The RSS autodiscovery link and the English home page used to advertise the
+# feeds with a trailing slash, which 404s here. Send readers that saved those
+# URLs to the real feeds. Pages matches static rules against the exact path,
+# so these only fire for the slashed form and cannot loop.
+/rss.xml/     /rss.xml     301
+/en/rss.xml/  /en/rss.xml  301

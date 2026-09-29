@@ -23,6 +23,7 @@ Based on the [astro-paper](https://github.com/satnaing/astro-paper) theme, refac
 - **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language, with optional semantic results from Cloudflare AI Search (see [Semantic search](#-semantic-search-optional)).
 - **Math Formulas**: LaTeX math embedded in Markdown, rendered at build time by [KaTeX](https://katex.org/) (remark-math + rehype-katex) — no client-side JS.
 - **Photo Gallery**: a `/gallery` page collecting image-host photos from posts marked `gallery: true`, grouped by post, with EXIF (camera / lens / settings) on hover and a [PhotoSwipe](https://photoswipe.com/) lightbox. Filterable by camera, lens and focal length. Thumbnails and EXIF are pre-generated into the repo (see [Photo Gallery](#-photo-gallery)).
+- **Table of Contents**: posts with enough headings get a TOC — a sticky rail beside the article on wide screens (≥1280px) that highlights the section you're reading, and a floating button that opens it as a sheet on smaller ones (see [Table of contents](#table-of-contents)).
 - **SEO Optimized**: multi-language meta tags, sitemap, and OpenGraph pre-configured.
 
 ## 🛠️ Quick Start
@@ -117,6 +118,48 @@ To edit content on the live site (`/keystatic`), connect Keystatic to GitHub:
 Create Markdown/MDX files in `src/content/posts/zh/` or `src/content/posts/en/`. **The directory prefix is the language**: a file under `zh/` becomes `/posts/<slug>`, and under `en/` becomes `/en/posts/<slug>`. Use the same `slug` in both languages so the language switcher maps them one-to-one.
 
 (On the `keystatic-workers` branch you can also edit visually at `/keystatic`.)
+
+### Mixing languages
+
+English pages turn on the font's proportional widths (`pwid`) so curly quotes, apostrophes and dashes take Latin widths. A Chinese passage inside an English post gets them too, which narrows its full-width comma and parentheses. Mark the passage's language to keep them full-width:
+
+```md
+The sign read <span lang="zh">所有内容，均为生成。</span>
+```
+
+Chinese posts are unaffected; write English inside them as usual.
+
+### Table of contents
+
+A post with at least 3 h2–h3 headings gets a table of contents: on wide screens (≥1280px) a rail beside the article that follows your reading position, on smaller screens a floating button (bottom start) that opens it as a sheet. Headings holding math, inline code or links are listed as clean plain text. Tune the threshold and depth in `astro-paper.config.ts`:
+
+```ts
+features: {
+  toc: { enabled: true, minHeadings: 3, maxDepth: 3 }, // enabled: false turns it off site-wide
+},
+```
+
+Per post, frontmatter overrides it: `toc: false` hides it, `toc: true` shows it even below the threshold. A remark-toc "Table of contents" / "目录" heading in the body is never listed.
+
+### Reading time
+
+Post cards and the post header show an estimated reading time after the date ("5 min read"). CJK characters (~400/min) and Latin words (~230/min) are counted separately and added up, so a Chinese post full of English terms is estimated as fairly as an English one; code blocks, math, URLs and markup don't count. `gallery: true` posts show none. Turn it off with `features.readingTime: false`.
+
+### Related posts
+
+At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. The `others` tag that untagged posts get by default doesn't count. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
+
+### Share links
+
+The share row under each post starts with a "Copy link" button (on devices with a system share sheet it opens that instead), followed by `shareLinks` from `astro-paper.config.ts`. In a share URL, `{url}` and `{title}` are replaced by the post's URL and title, both URL-encoded; a URL with neither placeholder gets the post URL appended, as before:
+
+```ts
+shareLinks: [
+  { name: "x", url: "https://x.com/intent/post?url={url}&text={title}" },
+  { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" }, // URL appended
+  { name: "mail", url: "mailto:?subject={title}&body={url}" },
+],
+```
 
 ## 📸 Photo Gallery
 
@@ -255,7 +298,7 @@ pnpm build                   # verify
 - `src/utils/getPostPaths.ts` — strips the locale dir from slugs; infers locale from dir.
 - `src/pages/[lang]/**` — English route tree (upstream is single-language).
 - The `getCollection("posts", …)` calls in `src/pages/**` — add per-locale (`zh/`) filtering.
-- `src/components/LanguageSwitcher.astro` + the redirect script in `src/layouts/Layout.astro`.
+- `src/components/LanguageSwitcher.astro` + the redirect script in `src/layouts/Layout.astro`, both fed by `src/utils/resolveAlternate.ts` (which pages exist in each language: a new page needs a route file in both `src/pages/` and `src/pages/[lang]/` to get a counterpart link and `hreflang`).
 - `src/styles/theme.css` `--font-app` (CJK stack) + the font import in `src/layouts/Layout.astro`.
 - `_redirects`, `package.json` (deploy-related deps & scripts).
 

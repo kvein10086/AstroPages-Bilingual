@@ -1,0 +1,135 @@
+---
+import IconList from "@/assets/icons/IconList.svg";
+import IconX from "@/assets/icons/IconX.svg";
+import { useTranslations } from "@/i18n";
+import type { TocItem } from "@/utils/getTocItems";
+import PostTocList from "./PostTocList.astro";
+
+/**
+ * Post table of contents, shared by the zh and en post pages. Renders:
+ * - a side rail beside the article, sticky, on screens ≥ xl (80rem) — the
+ *   page wraps `#article` in a `relative` box and the rail hangs off its
+ *   inline-end edge, so the article column itself never moves;
+ * - below xl, a floating button that opens the same list in a modal sheet.
+ *
+ * The page decides whether to render it at all (see `getPostToc`).
+ *
+ * Behaviour (scroll spy, pinning, the sheet) lives in src/scripts/postToc.ts;
+ * the sheet's skin is in the "Post table of contents" block of global.css.
+ */
+type Props = {
+  items: TocItem[];
+  /** `toc: true` in the frontmatter: offer the button on short posts too. */
+  forced?: boolean;
+};
+
+const { items, forced = false } = Astro.props;
+const t = useTranslations(Astro.currentLocale);
+---
+
+<!-- A plain box, not <aside>: the <nav> is the landmark, and an unnamed
+     complementary one around it would only add a blank entry. -->
+<div
+  class="absolute inset-y-0 inset-s-[calc(100%+2rem)] hidden w-[min(20rem,calc(50vw-27rem))] xl:block print:hidden"
+  data-pagefind-ignore="all"
+>
+  <nav
+    data-toc-rail
+    aria-labelledby="post-toc-label"
+    class="sticky top-8 flex max-h-[min(calc(100dvh-4rem),100%)] flex-col"
+  >
+    <p
+      id="post-toc-label"
+      class="text-muted-foreground mb-2 ps-3 text-xs font-medium tracking-wider"
+    >
+      {t.post.toc}
+    </p>
+    <div
+      data-toc-scroll
+      class="relative min-h-0 overflow-y-auto overscroll-contain py-1"
+    >
+      <div data-toc-track class="relative">
+        <span
+          aria-hidden="true"
+          class="bg-foreground/10 absolute inset-y-0 inset-s-0 w-0.5 rounded-full"
+        ></span>
+        <!-- Position and size come from postToc.ts; `data-jump` skips the slide. -->
+        <span
+          aria-hidden="true"
+          data-toc-indicator
+          class:list={[
+            "bg-accent absolute inset-s-0 top-0 w-0.5 rounded-full",
+            "h-(--toc-indicator-h) translate-y-(--toc-indicator-y) opacity-0 data-active:opacity-100",
+            "transition-[translate,height,opacity] duration-200 ease-out data-jump:transition-opacity",
+          ]}></span>
+        <PostTocList items={items} variant="rail" />
+      </div>
+    </div>
+  </nav>
+</div>
+
+<button
+  type="button"
+  hidden
+  data-toc-button
+  data-toc-forced={forced || undefined}
+  aria-label={t.a11y.openToc}
+  aria-haspopup="dialog"
+  aria-controls="post-toc-sheet"
+  class:list={[
+    // Centred on BackToTop: its 56px circle on phones, its 32px pill from md.
+    "fixed inset-s-4 bottom-[calc(2rem+4px+env(safe-area-inset-bottom))] md:bottom-[calc(2rem-8px+env(safe-area-inset-bottom))]",
+    "z-40 grid size-12 place-items-center rounded-full xl:hidden print:hidden",
+    "bg-background/90 text-foreground ring-foreground/10 shadow-lg ring-1 backdrop-blur",
+    // On the dark page a shadow doesn't lift it; a lighter surface does.
+    "dark:ring-foreground/20 dark:bg-[color-mix(in_srgb,var(--foreground)_10%,var(--background))] dark:shadow-black/40",
+    "hover:text-accent focus-visible:text-accent",
+    "pointer-events-none translate-y-4 opacity-0 transition duration-300 ease-out",
+    "data-visible:pointer-events-auto data-visible:translate-y-0 data-visible:opacity-100",
+  ]}
+  data-pagefind-ignore="all"
+>
+  <IconList class="size-5" />
+</button>
+
+<dialog
+  id="post-toc-sheet"
+  data-toc-sheet
+  aria-labelledby="post-toc-sheet-label"
+  closedby="any"
+  class="post-toc-sheet print:hidden"
+  data-pagefind-ignore="all"
+>
+  <div
+    class="border-foreground/10 flex shrink-0 items-center justify-between border-b py-1.5 ps-5 pe-1.5"
+  >
+    <p
+      id="post-toc-sheet-label"
+      class="text-muted-foreground text-sm font-medium tracking-wider"
+    >
+      {t.post.toc}
+    </p>
+    <button
+      type="button"
+      data-toc-close
+      aria-label={t.a11y.closeToc}
+      class="text-muted-foreground hover:text-foreground grid size-11 place-items-center rounded-full"
+    >
+      <IconX class="size-5" />
+    </button>
+  </div>
+  <nav
+    data-toc-sheet-list
+    aria-labelledby="post-toc-sheet-label"
+    class="relative min-h-0 overflow-y-auto overscroll-contain pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+  >
+    <PostTocList items={items} variant="sheet" />
+  </nav>
+</dialog>
+
+<script>
+  import { initPostToc } from "@/scripts/postToc";
+  import { onPageReady } from "@/scripts/onPageReady";
+
+  onPageReady(initPostToc);
+</script>

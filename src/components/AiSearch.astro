@@ -151,4 +151,15 @@ const postsPrefix = aiSearch
     font-size: 0.7rem;
     color: var(--muted-foreground);
   }
+
+  /* The panel has posts to offer and Pagefind has none: its "no results"
+     line right below would contradict the panel, beside a tag filter with
+     nothing to filter. Drop the drawer for that case — unless a filter is
+     ticked, which may be why Pagefind came up empty and has to stay
+     reachable to be unticked. */
+  #pagefind-search
+    form:has(> #ai-search-panel:not([hidden]) .ai-search__result)
+    > .pagefind-ui__drawer:not(:has(.pagefind-ui__result, input:checked)) {
+    display: none;
+  }
 </style>

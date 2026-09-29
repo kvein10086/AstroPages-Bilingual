@@ -103,7 +103,37 @@ interface FeaturesConfig {
         imageDomains: string[];
       }
     | { enabled: false };
+  /**
+   * Table of contents beside post articles (side rail ≥1280px, floating
+   * button + sheet below). A post's `toc` frontmatter overrides the threshold:
+   * `false` hides it, `true` shows it whatever the heading count.
+   */
+  toc?:
+    | {
+        enabled: true;
+        /** Fewest listed headings before the TOC appears. Defaults to 3. */
+        minHeadings?: number;
+        /** Deepest heading level listed (h2…h4). Defaults to 3. */
+        maxDepth?: 2 | 3 | 4;
+      }
+    | { enabled: false };
+  /**
+   * Estimated reading time after the date, on post cards and the post header.
+   * CJK characters and Latin words are counted separately and added up; hidden
+   * on `gallery: true` posts. Defaults to true.
+   */
+  readingTime?: boolean;
+  /**
+   * Up to three posts sharing the most tags, listed after the share links.
+   * Nothing is shown for a post whose tags no other post has. Defaults to true.
+   */
+  relatedPosts?: boolean;
 }
+
+/** `features.toc` with its defaults applied. */
+type ResolvedTocConfig =
+  | { enabled: true; minHeadings: number; maxDepth: 2 | 3 | 4 }
+  | { enabled: false };
 
 interface SocialLink {
   /**
@@ -126,7 +156,13 @@ interface ShareLink {
    * e.g. "facebook" → src/assets/icons/socials/facebook.svg
    */
   name: string;
-  /** Base share URL. The post URL will be appended as a query param. */
+  /**
+   * Share URL template. `{url}` and `{title}` are replaced by the post's URL
+   * and title, both URL-encoded, e.g.
+   * "https://x.com/intent/post?url={url}&text={title}". A template with
+   * neither placeholder gets the encoded post URL appended instead, e.g.
+   * "https://www.facebook.com/sharer.php?u=".
+   */
   url: string;
   /** Rendering style used by the source icon. Defaults to "outline". */
   iconStyle?: "outline" | "solid";
@@ -138,7 +174,7 @@ interface ShareLink {
   linkTitle?: string;
 }
 
-interface AstroPaperConfig {
+export interface AstroPaperConfig {
   site: SiteConfig;
   posts?: PostsConfig;
   features?: FeaturesConfig;
@@ -167,9 +203,12 @@ type ResolvedAiSearchConfig = Required<
   Exclude<NonNullable<FeaturesConfig["aiSearch"]>, false>
 >;
 
-type ResolvedFeaturesConfig = Required<Omit<FeaturesConfig, "aiSearch">> & {
+type ResolvedFeaturesConfig = Required<
+  Omit<FeaturesConfig, "aiSearch" | "toc">
+> & {
   /** `false` when no endpoint is configured. */
   aiSearch: ResolvedAiSearchConfig | false;
+  toc: ResolvedTocConfig;
 };
 
 export interface ResolvedAstroPaperConfig {

@@ -2,6 +2,7 @@ import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
 import { glob } from "astro/loaders";
 import config from "@/config";
+import { DEFAULT_TAG } from "@/utils/topicTags";
 
 export const BLOG_PATH = "src/content/posts";
 
@@ -18,11 +19,14 @@ const posts = defineCollection({
       // Default gallery state for this post's media; a per-image markdown
       // title `"gallery"` / `"nogallery"` overrides it either way.
       gallery: z.boolean().optional(),
-      tags: z.array(z.string()).default(["others"]),
+      tags: z.array(z.string()).default([DEFAULT_TAG]),
       ogImage: image().or(z.string()).optional(),
       description: z.string(),
       canonicalURL: z.string().optional(),
       hideEditPost: z.boolean().optional(),
+      // Table of contents override: `false` hides it, `true` shows it even
+      // below `features.toc.minHeadings`; unset follows the threshold.
+      toc: z.boolean().optional(),
       timezone: z.string().optional(),
     }),
 });

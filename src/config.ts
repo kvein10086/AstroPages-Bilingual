@@ -5,13 +5,28 @@
  * apply defaults and expose a fully-resolved config shape (`ResolvedAstroPaperConfig`).
  */
 import userConfig from "@/astro-paper.config";
-import type { ResolvedAstroPaperConfig } from "./types/config";
+import type {
+  AstroPaperConfig,
+  ResolvedAstroPaperConfig,
+} from "./types/config";
 import {
   PUBLIC_AI_SEARCH_URL,
   PUBLIC_GOOGLE_SITE_VERIFICATION,
 } from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "default-og.jpg";
+
+/** On unless explicitly disabled; thresholds filled in either way. */
+function resolveToc(
+  toc: NonNullable<AstroPaperConfig["features"]>["toc"]
+): ResolvedAstroPaperConfig["features"]["toc"] {
+  if (toc?.enabled === false) return { enabled: false };
+  return {
+    enabled: true,
+    minHeadings: toc?.minHeadings ?? 3,
+    maxDepth: toc?.maxDepth ?? 3,
+  };
+}
 
 /**
  * The semantic-search panel is on only when an endpoint comes from the user
@@ -60,6 +75,9 @@ const config: ResolvedAstroPaperConfig = {
     search: userConfig.features?.search ?? "pagefind",
     aiSearch: resolveAiSearch(),
     gallery: userConfig.features?.gallery ?? { enabled: false },
+    toc: resolveToc(userConfig.features?.toc),
+    readingTime: userConfig.features?.readingTime ?? true,
+    relatedPosts: userConfig.features?.relatedPosts ?? true,
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],

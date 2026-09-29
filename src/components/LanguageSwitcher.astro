@@ -1,27 +1,44 @@
 ---
 import IconLanguage from "@/assets/icons/IconLanguage.svg";
-import { getAlternatePath, type Locale } from "@/i18n/helpers";
-import { stripBase } from "@/utils/withBase";
+import { getLocaleInfo, type Locale } from "@/i18n/helpers";
+import { resolveAlternate } from "@/utils/resolveAlternate";
 import config from "@/config";
 
 const locale = (Astro.currentLocale ?? config.site.lang) as Locale;
 const target: Locale = locale === "zh" ? "en" : "zh";
 const label = target === "zh" ? "切换到中文" : "Switch to English";
+const { shortLabel, hreflang } = getLocaleInfo(target);
 
-// Map the current path to its counterpart in the other language.
-const currentPath = stripBase(Astro.url.pathname);
-const href = getAlternatePath(currentPath, target);
+// The same page in the other language when it exists there, otherwise its
+// nearest existing ancestor (e.g. a Chinese-only tag → the English tag
+// index; a 404 page → the other home page) — never a dead link.
+const { href } = await resolveAlternate(Astro.url.pathname, target);
 ---
 
+{
+  /* The label is written in the target language, so `lang` makes screen
+  readers pronounce it that way. The short visible label says where the link
+  goes; the icon alone only says "language". The inner span carries the row
+  layout because the header menu forces its links to `display: block`.
+  The accessible name starts with that visible label, so a voice-control user
+  can say "click EN" (WCAG 2.5.3). Between the `sm` and `md` breakpoints the
+  header row has no room for it; the label is then only read out. */
+}
 <a
   href={href}
   data-lang-switch={target}
-  hreflang={target}
-  class="focus-outline hover:text-accent flex items-center justify-center"
+  hreflang={hreflang}
+  lang={target}
+  class="focus-outline hover:text-accent flex items-center justify-center sm:h-8"
   title={label}
-  aria-label={label}
 >
-  <IconLanguage class="size-6 sm:size-5" />
+  <span class="flex items-center gap-0.5">
+    <IconLanguage aria-hidden="true" class="size-6 shrink-0 sm:size-5" />
+    <span class="text-xs leading-none font-medium sm:max-md:sr-only"
+      >{shortLabel}</span
+    >
+    <span class="sr-only">{` – ${label}`}</span>
+  </span>
 </a>
 
 <script>

@@ -1,0 +1,68 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { useTranslations } from "@/i18n";
+import config from "@/config";
+
+// Built as dist/en/404/index.html; the localeNotFoundPages integration in
+// astro.config.ts copies it to dist/en/404.html, which Cloudflare Pages
+// serves for missing /en/* URLs.
+export function getStaticPaths() {
+  return [{ params: { lang: "en" } }];
+}
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+---
+
+<Layout title={`${t.notFound.title} | ${config.site.title}`}>
+  {
+    /* The page is also reachable with status 200 at its own URL (/404.html,
+    /en/404/); keep that copy out of search results. */
+  }
+  <meta slot="head" name="robots" content="noindex" />
+  <Header />
+
+  <main
+    id="main-content"
+    class="app-layout flex flex-1 items-center justify-center"
+  >
+    <div class="mb-14 flex flex-col items-center justify-center">
+      <h1 class="text-accent text-9xl font-bold">404</h1>
+      <span aria-hidden="true"> ¯\_(ツ)_/¯ </span>
+      <p class="mt-4 text-2xl sm:text-3xl">{t.notFound.message}</p>
+      {
+        /* A reader who followed a stale link wants the content, not just the
+        home page: offer search and the full post list as well. */
+      }
+      <ul
+        class="my-6 flex flex-wrap justify-center gap-x-8 gap-y-3 text-lg [&_a]:underline [&_a]:decoration-dashed [&_a]:underline-offset-8"
+      >
+        <li>
+          <LinkButton href={getRelativeLocaleUrl(locale, "")}>
+            {t.notFound.goHome}
+          </LinkButton>
+        </li>
+        {
+          config.features.search === "pagefind" && (
+            <li>
+              <LinkButton href={getRelativeLocaleUrl(locale, "search")}>
+                {t.notFound.searchPosts}
+              </LinkButton>
+            </li>
+          )
+        }
+        <li>
+          <LinkButton href={getRelativeLocaleUrl(locale, "posts")}>
+            {t.notFound.allPosts}
+          </LinkButton>
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

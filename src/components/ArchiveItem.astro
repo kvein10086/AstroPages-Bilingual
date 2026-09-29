@@ -1,0 +1,42 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { toTransitionName } from "@/utils/toTransitionName";
+import { getPostDateParts } from "@/utils/getPostDateParts";
+
+type Props = CollectionEntry<"posts">;
+
+const post = Astro.props;
+const { id, data, filePath } = post;
+
+// Always the publication date, in the timezone the archive groups by, so a
+// row can never disagree with the month it sits under. (Card shows the
+// update date instead, which would put a March date under January.)
+const { month, day } = getPostDateParts(post);
+const pad = (n: number) => String(n).padStart(2, "0");
+
+// The title's transition name sits on a block box, like Card's heading: a
+// title wrapping onto a second line would otherwise be an inline box split
+// into fragments, which the View Transitions spec skips when capturing.
+---
+
+<li class="flex items-baseline gap-x-3 py-1">
+  <time
+    datetime={data.pubDatetime.toISOString()}
+    class="text-muted-foreground shrink-0 text-sm tabular-nums"
+  >
+    {pad(month)}-{pad(day)}
+  </time>
+  <a
+    href={getPostUrl(id, filePath, Astro.currentLocale)}
+    class:list={[
+      "text-accent min-w-0",
+      "decoration-dashed underline-offset-4 hover:underline",
+      "focus-visible:no-underline focus-visible:underline-offset-0",
+    ]}
+  >
+    <span class="block" transition:name={toTransitionName(data.title)}>
+      {data.title}
+    </span>
+  </a>
+</li>

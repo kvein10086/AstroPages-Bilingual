@@ -6,10 +6,11 @@ import Header from "@/components/Header.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Main from "@/components/Main.astro";
 import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
+import ArchiveItem from "@/components/ArchiveItem.astro";
 import { postFilter } from "@/utils/postFilter";
 import { getPostsByGroupCondition } from "@/pages/archives/_utils/getPostsByGroupCondition";
-import { useTranslations } from "@/i18n";
+import { getPostDateParts } from "@/utils/getPostDateParts";
+import { tplStr, useTranslations } from "@/i18n";
 import config from "@/config";
 
 export function getStaticPaths() {
@@ -26,9 +27,19 @@ if (!config.features.showArchives && notFoundUrl) {
 
 const t = useTranslations(locale);
 
+// Screen readers get the year/month counts with their unit; the bare
+// superscript number is hidden from them.
+const postCount = (count: number) =>
+  tplStr(count === 1 ? t.a11y.postCountOne : t.a11y.postCount, { count });
+
 const posts = await getCollection("posts", ({ id }) => id.startsWith("en/"));
 const filteredPosts = posts.filter(postFilter);
-const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
+// Only the month name is wanted, so format a fixed UTC date in UTC: no zone
+// can shift it into a neighbouring month.
+const monthFormatter = new Intl.DateTimeFormat(locale, {
+  month: "long",
+  timeZone: "UTC",
+});
 ---
 
 <Layout title={`${t.pages.archivesTitle} | ${config.site.title}`}>
@@ -39,35 +50,43 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
   <Main pageTitle={t.pages.archivesTitle} pageDesc={t.pages.archivesDesc}>
     {
       Object.entries(
-        getPostsByGroupCondition(filteredPosts, post =>
-          post.data.pubDatetime.getFullYear()
+        getPostsByGroupCondition(
+          filteredPosts,
+          post => getPostDateParts(post).year
         )
       )
         .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
         .map(([year, yearGroup]) => (
-          <div>
-            <span class="text-2xl font-bold">{year}</span>
-            <sup class="text-muted-foreground text-sm">{yearGroup.length}</sup>
+          <section class="mb-10">
+            <h2 class="inline text-2xl font-bold">{year}</h2>
+            <sup aria-hidden="true" class="text-muted-foreground text-sm">
+              {yearGroup.length}
+            </sup>
+            <span class="sr-only">{postCount(yearGroup.length)}</span>
             {Object.entries(
               getPostsByGroupCondition(
                 yearGroup,
-                post => post.data.pubDatetime.getMonth() + 1
+                post => getPostDateParts(post).month
               )
             )
               .sort(([monthA], [monthB]) => Number(monthB) - Number(monthA))
               .map(([month, monthGroup]) => (
-                <div class="flex flex-col sm:flex-row">
-                  <div class="mt-6 min-w-36 text-lg sm:my-6">
-                    <span class="font-bold">
+                <div class="mt-6 flex flex-col sm:flex-row sm:items-baseline">
+                  <div class="min-w-36 text-lg">
+                    <h3 class="inline font-bold">
                       {monthFormatter.format(
-                        new Date(2000, Number(month) - 1, 1)
+                        Date.UTC(2000, Number(month) - 1, 1)
                       )}
-                    </span>
-                    <sup class="text-muted-foreground text-xs">
+                    </h3>
+                    <sup
+                      aria-hidden="true"
+                      class="text-muted-foreground text-xs"
+                    >
                       {monthGroup.length}
                     </sup>
+                    <span class="sr-only">{postCount(monthGroup.length)}</span>
                   </div>
-                  <ul>
+                  <ul class="mt-2 min-w-0 sm:mt-0">
                     {monthGroup
                       .sort(
                         (a, b) =>
@@ -79,12 +98,12 @@ const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long" });
                           )
                       )
                       .map(data => (
-                        <Card {...data} />
+                        <ArchiveItem {...data} />
                       ))}
                   </ul>
                 </div>
               ))}
-          </div>
+          </section>
         ))
     }
   </Main>
