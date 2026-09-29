@@ -11,7 +11,14 @@
  * otherwise pin the page to dark for good.
  */
 
-const THEME_KEY = "theme";
+// Not the old `theme` key: until this change an OS appearance switch (and
+// Chrome's print preview) wrote into it too, so a stored `theme` cannot be
+// told apart from a real click. Reading a fresh key drops those values for
+// good — every reader starts from "follow the system" once, and a genuine
+// choice costs one click to restore. The inline script in Layout.astro reads
+// the same key, so the first paint never flashes the legacy value.
+const THEME_KEY = "theme-choice";
+const LEGACY_THEME_KEY = "theme";
 const LIGHT = "light";
 const DARK = "dark";
 
@@ -59,6 +66,9 @@ function reflect(): void {
     .querySelector("meta[name='theme-color']")
     ?.setAttribute("content", bg);
 }
+
+// Nothing reads the legacy key any more; just tidy it away.
+localStorage.removeItem(LEGACY_THEME_KEY);
 
 function setup(): void {
   reflect();

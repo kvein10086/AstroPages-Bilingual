@@ -133,7 +133,8 @@ const rssHref = getRelativeLocaleUrl(
     -->
     <script is:inline>
       (function () {
-        const stored = localStorage.getItem("theme");
+        // An explicit choice only; see the key comment in theme.ts.
+        const stored = localStorage.getItem("theme-choice");
         const prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)"
         ).matches;
