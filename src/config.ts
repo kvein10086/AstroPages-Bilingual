@@ -51,6 +51,7 @@ const config: ResolvedAstroPaperConfig = {
     gallery: userConfig.features?.gallery ?? { enabled: false },
     toc: resolveToc(userConfig.features?.toc),
     readingTime: userConfig.features?.readingTime ?? true,
+    relatedPosts: userConfig.features?.relatedPosts ?? true,
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],

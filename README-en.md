@@ -135,6 +135,10 @@ Per post, frontmatter overrides it: `toc: false` hides it, `toc: true` shows it 
 
 Post cards and the post header show an estimated reading time after the date ("5 min read"). CJK characters (~400/min) and Latin words (~230/min) are counted separately and added up, so a Chinese post full of English terms is estimated as fairly as an English one; code blocks, math, URLs and markup don't count. `gallery: true` posts show none. Turn it off with `features.readingTime: false`.
 
+### Related posts
+
+At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
+
 ## 📸 Photo Gallery
 
 The `/gallery` page collects image-host photos straight from your posts' bodies. There's **no separate image list to maintain** — the photos come from the `![alt](url)` links already in your travelogues.

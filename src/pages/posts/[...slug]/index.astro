@@ -12,11 +12,13 @@ import { toTransitionName } from "@/utils/toTransitionName";
 import { getArticleImageInfo } from "@/utils/getGalleryAlbums";
 import { getPostToc } from "@/utils/getPostToc";
 import { getPostReadingTime } from "@/utils/getReadingTime";
+import { getRelatedPosts, type RelatedPost } from "@/utils/getRelatedPosts";
 import EditPost from "./_components/EditPost.astro";
 import ShareLinks from "./_components/ShareLinks.astro";
 import BackButton from "./_components/BackButton.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
+import RelatedPosts from "./_components/RelatedPosts.astro";
 import PostImages from "./_components/PostImages.astro";
 import PostToc from "./_components/PostToc.astro";
 import config from "@/config";
@@ -29,6 +31,8 @@ export async function getStaticPaths() {
     params: { slug: getPostSlug(post.id, post.filePath) },
     props: {
       post,
+      // Ranked against the same locale's published posts the routes come from.
+      relatedPosts: getRelatedPosts(post, sortedPosts),
       prevPost:
         index > 0
           ? {
@@ -57,11 +61,12 @@ type AdjacentPost = {
 
 type Props = {
   post: CollectionEntry<"posts">;
+  relatedPosts: RelatedPost[];
   prevPost: AdjacentPost;
   nextPost: AdjacentPost;
 };
 
-const { post, prevPost, nextPost } = Astro.props;
+const { post, relatedPosts, prevPost, nextPost } = Astro.props;
 const locale = Astro.currentLocale ?? config.site.lang;
 
 const {
@@ -191,6 +196,8 @@ const ogImage = ogImageUrl
     <ShareLinks />
 
     <hr class="my-8 border-dashed" />
+
+    <RelatedPosts posts={relatedPosts} />
 
     <AdjacentPostNav {prevPost} {nextPost} />
   </main>

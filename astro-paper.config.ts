@@ -43,6 +43,8 @@ export default defineAstroPaperConfig({
     toc: { enabled: true, minHeadings: 3, maxDepth: 3 },
     // "约 5 分钟" / "5 min read" after the date on cards and post headers.
     readingTime: true,
+    // Up to three posts sharing the most tags, at the end of each post.
+    relatedPosts: true,
   },
   socials: [
     { name: "github", url: "https://github.com/t0saki/AstroPages-Bilingual" },

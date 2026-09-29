@@ -24,6 +24,7 @@ export default {
     nextPost: "下一篇",
     toc: "目录",
     readingTime: "约 {{n}} 分钟",
+    relatedPosts: "相关文章",
   },
   pagination: {
     prev: "上一页",

@@ -23,6 +23,7 @@ export interface UIStrings {
     toc: string;
     /** Placeholder: {{n}} (minutes) */
     readingTime: string;
+    relatedPosts: string;
   };
   pagination: {
     prev: string;

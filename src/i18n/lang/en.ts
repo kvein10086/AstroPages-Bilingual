@@ -24,6 +24,7 @@ export default {
     nextPost: "Next Post",
     toc: "On this page",
     readingTime: "{{n}} min read",
+    relatedPosts: "Related posts",
   },
   pagination: {
     prev: "Prev",

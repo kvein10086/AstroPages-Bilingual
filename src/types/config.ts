@@ -102,6 +102,11 @@ interface FeaturesConfig {
    * on `gallery: true` posts. Defaults to true.
    */
   readingTime?: boolean;
+  /**
+   * Up to three posts sharing the most tags, listed after the share links.
+   * Nothing is shown for a post whose tags no other post has. Defaults to true.
+   */
+  relatedPosts?: boolean;
 }
 
 /** `features.toc` with its defaults applied. */
