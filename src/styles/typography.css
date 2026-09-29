@@ -28,6 +28,11 @@
     text-emphasis: filled dot;
     text-emphasis-position: under right;
   }
+  /* A link is already marked by its underline; dots below it as well just
+     stack two rows of marks under the same words. */
+  :lang(zh) em a {
+    text-emphasis: none;
+  }
 
   /* ===== Override default Tailwind Typography styles ===== */
   .app-prose {
