@@ -25,7 +25,8 @@ export interface UIStrings {
   pagination: {
     prev: string;
     next: string;
-    page: string;
+    /** Placeholder: {{n}} (the page number) */
+    pageN: string;
   };
   home: {
     socialLinks: string;
@@ -100,6 +101,7 @@ export interface UIStrings {
     openToc: string;
     closeToc: string;
     pagination: string;
+    breadcrumb: string;
   };
   notFound: {
     title: string;

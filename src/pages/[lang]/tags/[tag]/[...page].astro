@@ -28,13 +28,13 @@ export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
 
     return paginate(tagPosts, {
       params: { lang: "en", tag },
-      props: { tagName },
+      props: { tag, tagName },
       pageSize: config.posts.perPage,
     });
   });
 }
 
-const { page, tagName } = Astro.props;
+const { page, tag, tagName } = Astro.props;
 
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
@@ -43,7 +43,7 @@ const t = useTranslations(locale);
 <Layout title={`${t.pages.tagTitle}: ${tagName} | ${config.site.title}`}>
   <Header />
 
-  <Breadcrumb />
+  <Breadcrumb labels={{ [tag]: tagName }} />
 
   <Main
     pageTitle={`${t.pages.tagTitle}: ${tagName}`}

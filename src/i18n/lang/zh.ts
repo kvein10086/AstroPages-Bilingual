@@ -27,7 +27,7 @@ export default {
   pagination: {
     prev: "上一页",
     next: "下一页",
-    page: "第",
+    pageN: "第 {{n}} 页",
   },
   home: {
     socialLinks: "社交链接",
@@ -98,6 +98,7 @@ export default {
     openToc: "打开目录",
     closeToc: "关闭目录",
     pagination: "分页",
+    breadcrumb: "当前位置",
   },
   notFound: {
     title: "404 未找到",

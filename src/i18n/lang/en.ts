@@ -27,7 +27,7 @@ export default {
   pagination: {
     prev: "Prev",
     next: "Next",
-    page: "Page",
+    pageN: "Page {{n}}",
   },
   home: {
     socialLinks: "Social Links",
@@ -98,6 +98,7 @@ export default {
     openToc: "Open table of contents",
     closeToc: "Close table of contents",
     pagination: "Pagination",
+    breadcrumb: "Breadcrumb",
   },
   notFound: {
     title: "404 Not Found",
