@@ -119,6 +119,16 @@ Create Markdown/MDX files in `src/content/posts/zh/` or `src/content/posts/en/`.
 
 (On the `keystatic-workers` branch you can also edit visually at `/keystatic`.)
 
+### Mixing languages
+
+English pages turn on the font's proportional widths (`pwid`) so curly quotes, apostrophes and dashes take Latin widths. A Chinese passage inside an English post gets them too, which narrows its full-width comma and parentheses. Mark the passage's language to keep them full-width:
+
+```md
+The sign read <span lang="zh">所有内容，均为生成。</span>
+```
+
+Chinese posts are unaffected; write English inside them as usual.
+
 ### Table of contents
 
 A post with at least 3 h2–h3 headings gets a table of contents: on wide screens (≥1280px) a rail beside the article that follows your reading position, on smaller screens a floating button (bottom start) that opens it as a sheet. Headings holding math, inline code or links are listed as clean plain text. Tune the threshold and depth in `astro-paper.config.ts`:

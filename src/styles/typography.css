@@ -7,7 +7,10 @@
      apostrophe into one, so English read "lens’ s". Its `pwid` feature swaps
      in proportional forms; fonts without it are unaffected. Chinese keeps the
      full-width forms, which are correct there — also a passage marked
-     lang="zh" inside an English page. */
+     lang="zh" inside an English page. Unmarked Chinese on an English page
+     gets `pwid` too, which narrows ， （ ） to Latin widths (。、：；！？
+     stay full-width); CSS can't apply a feature per character, so such a
+     passage needs `<span lang="zh">` (README, "Mixing languages"). */
   :lang(en) {
     font-variant-east-asian: proportional-width;
   }
