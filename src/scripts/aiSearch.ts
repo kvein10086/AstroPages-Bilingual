@@ -44,6 +44,12 @@ const DEBOUNCE_MS = 600;
 const MIN_QUERY_CHARS = 2;
 const SNIPPET_CHARS = 160;
 const CACHE_LIMIT = 50;
+/**
+ * A post is listed only if its similarity is within this share of the best
+ * one's. Scores of unrelated posts sit close together just under those of
+ * related ones, so an absolute threshold alone lets a tail of noise through.
+ */
+const RELATIVE_FLOOR = 0.85;
 /** Pagefind UI is created lazily; stop waiting for its input after this. */
 const INPUT_WAIT_MS = 10_000;
 
@@ -70,7 +76,7 @@ function readConfig(): AiSearchConfig | null {
     titleSuffix: data.titleSuffix ?? "",
     timeoutMs: num(data.timeoutMs, 5000),
     maxResults: Math.max(1, Math.floor(num(data.maxResults, 5))),
-    matchThreshold: num(data.matchThreshold, 0.2),
+    matchThreshold: num(data.matchThreshold, 0.4),
     label: data.label ?? "",
     loading: data.loading ?? "",
     note: data.note ?? "",
@@ -202,7 +208,19 @@ function toResult(
   };
 }
 
-/** Keep the ranking, one entry per page (its best chunk), `maxResults` pages. */
+/** Vector similarity of a chunk, 0–1; undefined when the response has none. */
+function similarity(chunk: Record<string, unknown>) {
+  const details = isRecord(chunk.scoring_details) ? chunk.scoring_details : {};
+  const score = details.vector_score ?? chunk.score;
+  return typeof score === "number" && Number.isFinite(score)
+    ? score
+    : undefined;
+}
+
+/**
+ * Keep the ranking, one entry per page (its best chunk), `maxResults` pages,
+ * and drop the pages that trail the best match by too much.
+ */
 function parseResults(data: unknown, config: AiSearchConfig) {
   if (!isRecord(data) || data.success === false || !isRecord(data.result)) {
     throw new Error("Unexpected AI Search response");
@@ -211,14 +229,22 @@ function parseResults(data: unknown, config: AiSearchConfig) {
 
   const results: AiSearchResult[] = [];
   const seen = new Set<string>();
+  let best: number | undefined;
   for (const chunk of chunks) {
     if (results.length >= config.maxResults) break;
     if (!isRecord(chunk)) continue;
     const key = isRecord(chunk.item) ? str(chunk.item.key) : "";
     if (!key || seen.has(key)) continue;
     seen.add(key);
+
+    const score = similarity(chunk);
+    if (best !== undefined && score !== undefined) {
+      if (score < best * RELATIVE_FLOOR) continue;
+    }
     const result = toResult(chunk, config);
-    if (result) results.push(result);
+    if (!result) continue;
+    best ??= score;
+    results.push(result);
   }
   return results;
 }

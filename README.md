@@ -227,7 +227,7 @@ features: {
 },
 ```
 
-配置里的值优先于环境变量；`aiSearch: false` 可在设置了环境变量时强制关闭。还可调 `timeoutMs`（默认 5000）、`maxResults`（默认 5）、`matchThreshold`（默认 0.2）。查询只按当前语言的文章前缀过滤，查询内容会发送给 Cloudflare，页面上有一行说明。
+配置里的值优先于环境变量；`aiSearch: false` 可在设置了环境变量时强制关闭。还可调 `timeoutMs`（默认 5000）、`maxResults`（默认 5）、`matchThreshold`（默认 0.4）。查询只按当前语言的文章前缀过滤，查询内容会发送给 Cloudflare，页面上有一行说明。
 
 ## 🧩 分支说明
 

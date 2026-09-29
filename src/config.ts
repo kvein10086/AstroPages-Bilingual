@@ -31,7 +31,7 @@ function resolveAiSearch(): ResolvedAstroPaperConfig["features"]["aiSearch"] {
     endpoint,
     timeoutMs: aiSearch?.timeoutMs ?? 5000,
     maxResults: aiSearch?.maxResults ?? 5,
-    matchThreshold: aiSearch?.matchThreshold ?? 0.2,
+    matchThreshold: aiSearch?.matchThreshold ?? 0.4,
   };
 }
 

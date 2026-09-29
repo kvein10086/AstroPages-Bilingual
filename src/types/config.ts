@@ -76,7 +76,7 @@ interface FeaturesConfig {
         timeoutMs?: number;
         /** Posts listed in the panel. Defaults to 5. */
         maxResults?: number;
-        /** Minimum vector similarity (0–1) a chunk needs. Defaults to 0.2. */
+        /** Minimum vector similarity (0–1) a chunk needs. Defaults to 0.4. */
         matchThreshold?: number;
       }
     | false;

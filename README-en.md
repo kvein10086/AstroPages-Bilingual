@@ -219,7 +219,7 @@ features: {
 },
 ```
 
-The config value wins over the env var, and `aiSearch: false` turns the feature off even when the env var is set. `timeoutMs` (default 5000), `maxResults` (default 5) and `matchThreshold` (default 0.2) are optional. Queries are filtered to the current language's posts; the query text is sent to Cloudflare, and the panel says so.
+The config value wins over the env var, and `aiSearch: false` turns the feature off even when the env var is set. `timeoutMs` (default 5000), `maxResults` (default 5) and `matchThreshold` (default 0.4) are optional. Queries are filtered to the current language's posts; the query text is sent to Cloudflare, and the panel says so.
 
 ## 🧩 Branches
 
