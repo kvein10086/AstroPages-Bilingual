@@ -122,12 +122,31 @@
        would be trapped inside the scroller (they can't collapse through it
        into the neighbouring paragraphs'), so the typography plugin's table
        margins move out here: 1.75em is its 2em at the table's 0.875em font
-       size, i.e. the spacing is unchanged. */
+       size, i.e. the spacing is unchanged.
+       A table that outgrows the column is laid out at its min-content width,
+       and CJK text has a min-content of one character, so its columns
+       collapse to two or three characters per line (and short headers such
+       as 列二 wrap). Once the table scrolls anyway, a per-cell floor keeps it
+       readable at the cost of scrolling a little further; table layout counts
+       the cell's padding into it, so 6em leaves about four CJK characters per
+       line. The floor is gated on the wrapper actually scrolling: on a table
+       that fits it would only widen short numeric columns and squeeze the
+       text column beside them. The floor only ever widens the table, so it
+       can't toggle the query that applies it. Browsers without scroll-state
+       queries keep the plain min-content layout. */
     .table-wrap {
       @apply focus-visible:outline-accent my-[1.75em] overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dashed;
 
       > table {
         @apply my-0;
+      }
+
+      container-type: scroll-state;
+
+      @container scroll-state(scrollable: inline) {
+        :is(th, td) {
+          @apply min-w-[6em];
+        }
       }
     }
   }
