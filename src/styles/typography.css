@@ -206,6 +206,13 @@
         @apply my-0;
       }
 
+      /* A table that still fits squeezes too: keep a CJK header such as 特性
+         whole rather than one character per line. Latin headers wrap at
+         spaces as before. */
+      th {
+        word-break: keep-all;
+      }
+
       container-type: scroll-state;
 
       @container scroll-state(scrollable: inline) {
