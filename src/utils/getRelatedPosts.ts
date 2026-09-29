@@ -1,6 +1,7 @@
 import type { CollectionEntry } from "astro:content";
 import config from "@/config";
 import { slugifyStr } from "./slugify";
+import { topicTags } from "./topicTags";
 
 /** What the related-posts list needs of a post — kept small, like prev/next. */
 export type RelatedPost = {
@@ -16,16 +17,9 @@ export type RelatedPost = {
 
 const MAX_RELATED = 3;
 
-/**
- * The tag the content schema gives a post that lists none
- * (src/content.config.ts). It marks "untagged", not a topic, so it relates
- * nothing: otherwise every untagged post would recommend three others.
- */
-const DEFAULT_TAG = slugifyStr("others");
-
-/** A post's tag slugs, minus the placeholder default. */
-const topicTags = (post: CollectionEntry<"posts">) =>
-  post.data.tags.map(slugifyStr).filter(tag => tag !== DEFAULT_TAG);
+/** A post's topic tag slugs: the placeholder default relates nothing. */
+const topicSlugs = (post: CollectionEntry<"posts">) =>
+  topicTags(post.data.tags).map(slugifyStr);
 
 /** The date Datetime.astro shows for a post: the update when it is later. */
 const shownDate = ({ data }: CollectionEntry<"posts">) =>
@@ -49,7 +43,7 @@ export function getRelatedPosts(
 ): RelatedPost[] {
   if (!config.features.relatedPosts) return [];
 
-  const tags = new Set(topicTags(post));
+  const tags = new Set(topicSlugs(post));
   if (tags.size === 0) return [];
 
   return candidates
@@ -57,7 +51,7 @@ export function getRelatedPosts(
     .map(candidate => ({
       candidate,
       // A post listing one tag twice still shares it once.
-      shared: new Set(topicTags(candidate).filter(tag => tags.has(tag))).size,
+      shared: new Set(topicSlugs(candidate).filter(tag => tags.has(tag))).size,
     }))
     .filter(({ shared }) => shared > 0)
     .sort(
