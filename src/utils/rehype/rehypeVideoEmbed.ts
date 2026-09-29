@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { isVideoUrl } from "../media";
+import { manifestEntry, type ManifestEntry } from "./galleryManifest";
 
 /**
  * Render markdown video links as a real player.
@@ -14,11 +14,8 @@ import { isVideoUrl } from "../media";
  * thumbnail generator writes ahead of the build. Before it has run — a fresh
  * clone, or a clip added since the last CI pass — the player falls back to
  * loading its own metadata, so the post still works, just without a poster.
- *
- * One local gotcha: Astro caches rendered markdown by post content (in
- * `node_modules/.astro`), and the manifest is an input it doesn't know about.
- * After regenerating thumbnails locally, clear that cache to see new posters.
- * CI builds from a fresh clone, so deployments are never stale.
+ * (After regenerating thumbnails locally, clear Astro's markdown cache to see
+ * new posters — see `galleryManifest.ts`.)
  *
  * The tree walk and the hast types are hand-rolled on purpose: this module is
  * pulled in by `astro.config.ts`, so it must not import packages that are only
@@ -33,27 +30,6 @@ interface HastNode {
   children?: HastNode[];
 }
 
-interface ManifestEntry {
-  thumb?: string;
-  width?: number;
-  height?: number;
-}
-
-/**
- * Read the manifest once, at module load. Missing (or malformed) is normal
- * before the generator's first run and must not break the build.
- */
-function readManifest(): Record<string, ManifestEntry> {
-  try {
-    const file = new URL("../../data/gallery-manifest.json", import.meta.url);
-    return JSON.parse(readFileSync(file, "utf8"));
-  } catch {
-    return {};
-  }
-}
-
-const manifest = readManifest();
-
 /** Normalize an Astro `base` to a prefix ending in exactly one slash. */
 function normalizeBase(base: string): string {
   const trimmed = base.replace(/\/+$/, "");
@@ -62,7 +38,7 @@ function normalizeBase(base: string): string {
 
 /** Rewrite one `<img>` node into a `<video>` player, in place. */
 function toVideo(node: HastNode, src: string, base: string): void {
-  const entry: ManifestEntry = manifest[src] ?? {};
+  const entry: ManifestEntry = manifestEntry(src) ?? {};
   const alt =
     typeof node.properties?.alt === "string" ? node.properties.alt : "";
 
