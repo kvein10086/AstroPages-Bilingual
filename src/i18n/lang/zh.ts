@@ -38,6 +38,7 @@ export default {
     prev: "上一页",
     next: "下一页",
     pageN: "第 {{n}} 页",
+    pagedTitle: "{{title}}（第 {{n}} 页）",
   },
   home: {
     socialLinks: "社交链接",

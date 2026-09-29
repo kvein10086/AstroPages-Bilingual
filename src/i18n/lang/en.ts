@@ -38,6 +38,7 @@ export default {
     prev: "Prev",
     next: "Next",
     pageN: "Page {{n}}",
+    pagedTitle: "{{title}} – Page {{n}}",
   },
   home: {
     socialLinks: "Social Links",

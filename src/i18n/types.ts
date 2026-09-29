@@ -39,6 +39,8 @@ export interface UIStrings {
     next: string;
     /** Placeholder: {{n}} (the page number) */
     pageN: string;
+    /** Document title of page 2 onwards of a list. Placeholders: {{title}}, {{n}} */
+    pagedTitle: string;
   };
   home: {
     socialLinks: string;
