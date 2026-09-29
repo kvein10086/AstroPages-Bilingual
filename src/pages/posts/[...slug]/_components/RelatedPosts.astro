@@ -12,15 +12,16 @@ const { posts } = Astro.props;
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
 
-// Same wording as the post dates (Datetime.astro): each date in its post's
-// timezone, spelled in the reader's language.
-const formatDate = ({ pubDatetime, timezone }: RelatedPost) =>
+// The date the post's card and header show (Datetime.astro): its update when
+// there is a later one, labelled as such, in the post's timezone and spelled
+// in the reader's language.
+const formatDate = ({ datetime, timezone }: RelatedPost) =>
   new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
     timeZone: timezone ?? config.site.timezone,
-  }).format(pubDatetime);
+  }).format(datetime);
 ---
 
 {
@@ -46,12 +47,12 @@ const formatDate = ({ pubDatetime, timezone }: RelatedPost) =>
               >
                 {post.title}
               </a>
-              <time
-                class="text-muted-foreground text-sm whitespace-nowrap"
-                datetime={post.pubDatetime.toISOString()}
-              >
-                {formatDate(post)}
-              </time>
+              <span class="text-muted-foreground text-sm whitespace-nowrap">
+                {post.isModified && `${t.post.updatedAt}: `}
+                <time datetime={post.datetime.toISOString()}>
+                  {formatDate(post)}
+                </time>
+              </span>
             </li>
           ))}
         </ul>

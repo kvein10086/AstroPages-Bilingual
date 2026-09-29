@@ -7,7 +7,10 @@ export type RelatedPost = {
   id: string;
   title: string;
   filePath: string | undefined;
-  pubDatetime: Date;
+  /** The date the post's card and header show: its update, if later. */
+  datetime: Date;
+  /** Whether `datetime` is the update rather than the publish date. */
+  isModified: boolean;
   timezone: string | undefined;
 };
 
@@ -24,8 +27,15 @@ const DEFAULT_TAG = slugifyStr("others");
 const topicTags = (post: CollectionEntry<"posts">) =>
   post.data.tags.map(slugifyStr).filter(tag => tag !== DEFAULT_TAG);
 
+/** The date Datetime.astro shows for a post: the update when it is later. */
+const shownDate = ({ data }: CollectionEntry<"posts">) =>
+  data.modDatetime && data.modDatetime > data.pubDatetime
+    ? data.modDatetime
+    : data.pubDatetime;
+
 /**
- * Up to three posts sharing the most tags with `post`, newer first on a tie;
+ * Up to three posts sharing the most tags with `post`, the more recently
+ * updated first on a tie (the date readers see on cards and headers);
  * none when nothing overlaps (the list then isn't rendered at all).
  *
  * `candidates` must already be one locale's published posts — the post pages
@@ -53,15 +63,15 @@ export function getRelatedPosts(
     .sort(
       (a, b) =>
         b.shared - a.shared ||
-        b.candidate.data.pubDatetime.getTime() -
-          a.candidate.data.pubDatetime.getTime()
+        shownDate(b.candidate).getTime() - shownDate(a.candidate).getTime()
     )
     .slice(0, MAX_RELATED)
     .map(({ candidate }) => ({
       id: candidate.id,
       title: candidate.data.title,
       filePath: candidate.filePath,
-      pubDatetime: candidate.data.pubDatetime,
+      datetime: shownDate(candidate),
+      isModified: shownDate(candidate) !== candidate.data.pubDatetime,
       timezone: candidate.data.timezone,
     }));
 }
