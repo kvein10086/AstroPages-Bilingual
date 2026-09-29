@@ -2,6 +2,7 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import IconHash from "@/assets/icons/IconHash.svg";
 import config from "@/config";
+import { tplStr, useTranslations } from "@/i18n";
 
 type Props = {
   tag: string;
@@ -14,6 +15,7 @@ type Props = {
 const { tag, tagName, size = "lg", count } = Astro.props;
 
 const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
 ---
 
 <li class:list={{ "flex items-start": count !== undefined }}>
@@ -37,12 +39,26 @@ const locale = Astro.currentLocale ?? config.site.lang;
       ]}
     />
     {tagName}
+    {
+      /* The link's accessible name carries the count with its unit; the
+         bare number beside it is for sighted readers only. */
+      count !== undefined && (
+        <span class="sr-only">
+          {tplStr(
+            count === 1 ? t.a11y.postCountOne : t.a11y.postCount,
+            { count }
+          )}
+        </span>
+      )
+    }
   </a>
   {
     /* Outside the link so the dashed underline stays on the name, the same
        superscript the archive page uses for its year/month counts. */
     count !== undefined && (
-      <sup class="text-muted-foreground ms-0.5 text-xs">{count}</sup>
+      <sup aria-hidden="true" class="text-muted-foreground ms-0.5 text-xs">
+        {count}
+      </sup>
     )
   }
 </li>

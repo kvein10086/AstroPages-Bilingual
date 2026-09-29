@@ -100,6 +100,8 @@ export default {
     closeToc: "关闭目录",
     pagination: "分页",
     breadcrumb: "当前位置",
+    postCount: "（{{count}} 篇文章）",
+    postCountOne: "（{{count}} 篇文章）",
   },
   notFound: {
     title: "404 未找到",

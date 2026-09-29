@@ -106,6 +106,10 @@ export interface UIStrings {
     closeToc: string;
     pagination: string;
     breadcrumb: string;
+    /** Screen-reader unit for a bare post-count superscript. Placeholder: {{count}} */
+    postCount: string;
+    /** `postCount` when the count is exactly one. Placeholder: {{count}} */
+    postCountOne: string;
   };
   notFound: {
     title: string;

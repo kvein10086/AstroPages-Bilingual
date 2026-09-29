@@ -100,6 +100,8 @@ export default {
     closeToc: "Close table of contents",
     pagination: "Pagination",
     breadcrumb: "Breadcrumb",
+    postCount: "({{count}} posts)",
+    postCountOne: "({{count}} post)",
   },
   notFound: {
     title: "404 Not Found",
