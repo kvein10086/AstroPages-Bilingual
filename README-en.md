@@ -20,7 +20,7 @@ Based on the [astro-paper](https://github.com/satnaing/astro-paper) theme, refac
 - **Type-Safe Content**: rigorous `astro:content` schema validation for all blog posts.
 - **Dynamic OG Images**: per-post OpenGraph images generated at build time (satori + sharp); CJK (and other non-Latin) titles pull in a fallback font instead of rendering as tofu boxes.
 - **Chinese Font**: bundled Source Han Serif (`@chinese-fonts/sypxzs`).
-- **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language.
+- **Static Full-Text Search**: [Pagefind](https://pagefind.app/), indexed per language, with optional semantic results from Cloudflare AI Search (see [Semantic search](#-semantic-search-optional)).
 - **Math Formulas**: LaTeX math embedded in Markdown, rendered at build time by [KaTeX](https://katex.org/) (remark-math + rehype-katex) — no client-side JS.
 - **Photo Gallery**: a `/gallery` page collecting image-host photos from posts marked `gallery: true`, grouped by post, with EXIF (camera / lens / settings) on hover and a [PhotoSwipe](https://photoswipe.com/) lightbox. Filterable by camera, lens and focal length. Thumbnails and EXIF are pre-generated into the repo (see [Photo Gallery](#-photo-gallery)).
 - **SEO Optimized**: multi-language meta tags, sitemap, and OpenGraph pre-configured.
@@ -203,6 +203,23 @@ The gallery page opens with a collapsed **Filter** panel: its first row is an al
 - A built-in lens's verbose name is tidied into a readable label, e.g. `iPhone 15 Pro back triple camera 6.765mm f/1.78` becomes `iPhone 15 Pro 24mm ƒ/1.78` (the physical focal length is swapped for the 35mm equivalent that lens was most often shot at); interchangeable lens names are kept verbatim.
 - The selection lives in the URL (`/gallery/?camera=…&lens=…&focal=24-35,36-70`), so a filtered view can be shared, and the lightbox skips photos the filter has hidden.
 - The panel is revealed by script; without JavaScript the page is the plain album list.
+
+## 🔎 Semantic search (optional)
+
+The search page can show a small "Related by meaning" panel between the Pagefind input and its results, powered by [Cloudflare AI Search](https://developers.cloudflare.com/ai-search/) and driven by the same input. It is **off by default**. When on, Pagefind still answers instantly and stays the fallback: if the semantic side times out, errors or finds nothing, the panel simply hides and the page is plain Pagefind.
+
+1. In the Cloudflare dashboard, create an AI Search instance with a **Website** data source pointing at your site (the domain must be on the same Cloudflare account).
+2. Limit crawling to post pages: include `**/posts/*/`, exclude the paginated list pages (`**/posts/2/`, `**/posts/3/`, … one per page), and add a content selector with path `**/posts/*/` and selector `#article`. Use static fetching, not browser rendering.
+3. Enable the **public endpoint** with only `/search` turned on, and add your site origin with its scheme (e.g. `https://example.com`) to the authorized hosts.
+4. Put the public endpoint URL (`https://<id>.search.ai.cloudflare.com`) in the `PUBLIC_AI_SEARCH_URL` env var (e.g. a Cloudflare Pages build variable), or in `astro-paper.config.ts`:
+
+```ts
+features: {
+  aiSearch: { endpoint: "https://<id>.search.ai.cloudflare.com" },
+},
+```
+
+The config value wins over the env var, and `aiSearch: false` turns the feature off even when the env var is set. `timeoutMs` (default 5000), `maxResults` (default 5) and `matchThreshold` (default 0.2) are optional. Queries are filtered to the current language's posts; the query text is sent to Cloudflare, and the panel says so.
 
 ## 🧩 Branches
 

@@ -6,9 +6,34 @@
  */
 import userConfig from "@/astro-paper.config";
 import type { ResolvedAstroPaperConfig } from "./types/config";
-import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
+import {
+  PUBLIC_AI_SEARCH_URL,
+  PUBLIC_GOOGLE_SITE_VERIFICATION,
+} from "astro:env/client";
 
 const DEFAULT_OG_IMAGE = "default-og.jpg";
+
+/**
+ * The semantic-search panel is on only when an endpoint comes from the user
+ * config or `PUBLIC_AI_SEARCH_URL` (config wins); an explicit `false` in the
+ * config keeps it off even when the env var is set.
+ */
+function resolveAiSearch(): ResolvedAstroPaperConfig["features"]["aiSearch"] {
+  const aiSearch = userConfig.features?.aiSearch;
+  if (aiSearch === false) return false;
+
+  const endpoint = (aiSearch?.endpoint || PUBLIC_AI_SEARCH_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+  if (!endpoint) return false;
+
+  return {
+    endpoint,
+    timeoutMs: aiSearch?.timeoutMs ?? 5000,
+    maxResults: aiSearch?.maxResults ?? 5,
+    matchThreshold: aiSearch?.matchThreshold ?? 0.2,
+  };
+}
 
 const config: ResolvedAstroPaperConfig = {
   site: {
@@ -33,6 +58,7 @@ const config: ResolvedAstroPaperConfig = {
     showBackButton: userConfig.features?.showBackButton ?? true,
     editPost: userConfig.features?.editPost ?? { enabled: false },
     search: userConfig.features?.search ?? "pagefind",
+    aiSearch: resolveAiSearch(),
     gallery: userConfig.features?.gallery ?? { enabled: false },
   },
   socials: userConfig.socials ?? [],

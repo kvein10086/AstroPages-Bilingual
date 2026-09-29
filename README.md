@@ -20,7 +20,7 @@
 - **类型安全的内容管理**：对所有博客文章进行严格的 `astro:content` schema 校验。
 - **动态 OG 图片**：基于 satori + sharp 在构建时为每篇文章生成 OpenGraph 图片；中文（以及其他非拉丁文字）标题会自动取用回退字体，不会渲染成豆腐块。
 - **中文字体**：内置思源屏显臻宋（`@chinese-fonts/sypxzs`）。
-- **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引。
+- **静态全文搜索**：基于 [Pagefind](https://pagefind.app/)，按语言分别索引；可选叠加 Cloudflare AI Search 语义结果（见 [语义搜索](#-语义搜索可选)）。
 - **数学公式**：Markdown 内嵌 LaTeX 公式，构建期由 [KaTeX](https://katex.org/) 渲染（remark-math + rehype-katex），无需客户端 JS。
 - **照片相册**：`/gallery` 页汇集设置了 `gallery: true` 的文章中的图床照片，按文章分组，悬停显示 EXIF（机型/镜头/参数），点击进 [PhotoSwipe](https://photoswipe.com/) 灯箱。可按相机、镜头、焦段筛选。缩略图与 EXIF 由脚本预生成入库（见 [照片相册](#-照片相册)）。**视频同样支持**：链接指向 `.mp4`/`.webm`/`.mov`/`.m4v` 即可，正文渲染成内联播放器，相册页收进一格带播放角标的画面。
 - **SEO 优化**：预配置多语言 Meta 标签、Sitemap 与 OpenGraph。
@@ -211,6 +211,23 @@ node scripts/generate-gallery-thumbs.mjs --prune  # 顺便清理不再被引用�
 - 手机等内置镜头的长串名称会被整理成可读的标签，例如 `iPhone 15 Pro back triple camera 6.765mm f/1.78` 显示为 `iPhone 15 Pro 24mm ƒ/1.78`（物理焦距换成该镜头最常用的等效焦距）；可换镜头的名称原样保留。
 - 筛选状态写在 URL 里（`/gallery/?camera=…&lens=…&focal=24-35,36-70`），可以直接分享；灯箱翻页会跳过被筛掉的照片。
 - 面板由脚本显示，未启用 JavaScript 时页面就是原本的相册列表。
+
+## 🔎 语义搜索（可选）
+
+搜索页可以在 Pagefind 输入框与结果之间加一栏「语义相关」，由 [Cloudflare AI Search](https://developers.cloudflare.com/ai-search/) 按语义找文章，与 Pagefind 共用同一个输入框。**默认关闭**；开启后 Pagefind 照常即时出结果，语义一侧超时、出错或没有结果时这一栏直接隐藏，页面退回纯 Pagefind。
+
+1. 在 Cloudflare 控制台创建 AI Search 实例，数据源选 **Website**，填本站域名（域名须托管在同一 Cloudflare 账号下）。
+2. 爬取范围只包含文章页：include 填 `**/posts/*/`，exclude 填分页列表页（`**/posts/2/`、`**/posts/3/` ……，有几页填几条）；内容选择器（content selector）的路径填 `**/posts/*/`，选择器填 `#article`。渲染方式选静态抓取，不要启用浏览器渲染。
+3. 开启 **Public endpoint**，只启用 `/search`，并把站点源（含协议，如 `https://example.com`）加入 authorized hosts。
+4. 把公开端点地址（`https://<id>.search.ai.cloudflare.com`）写进环境变量 `PUBLIC_AI_SEARCH_URL`（如 Cloudflare Pages 的构建环境变量），或写进 `astro-paper.config.ts`：
+
+```ts
+features: {
+  aiSearch: { endpoint: "https://<id>.search.ai.cloudflare.com" },
+},
+```
+
+配置里的值优先于环境变量；`aiSearch: false` 可在设置了环境变量时强制关闭。还可调 `timeoutMs`（默认 5000）、`maxResults`（默认 5）、`matchThreshold`（默认 0.2）。查询只按当前语言的文章前缀过滤，查询内容会发送给 Cloudflare，页面上有一行说明。
 
 ## 🧩 分支说明
 

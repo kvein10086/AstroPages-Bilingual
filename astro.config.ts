@@ -122,6 +122,13 @@ export default defineConfig({
         context: "client",
         optional: true,
       }),
+      // Cloudflare AI Search public endpoint for the optional semantic panel
+      // on /search (see `features.aiSearch` in astro-paper.config.ts).
+      PUBLIC_AI_SEARCH_URL: envField.string({
+        access: "public",
+        context: "client",
+        optional: true,
+      }),
     },
   },
 
