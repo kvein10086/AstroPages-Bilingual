@@ -14,6 +14,17 @@ export type RelatedPost = {
 const MAX_RELATED = 3;
 
 /**
+ * The tag the content schema gives a post that lists none
+ * (src/content.config.ts). It marks "untagged", not a topic, so it relates
+ * nothing: otherwise every untagged post would recommend three others.
+ */
+const DEFAULT_TAG = slugifyStr("others");
+
+/** A post's tag slugs, minus the placeholder default. */
+const topicTags = (post: CollectionEntry<"posts">) =>
+  post.data.tags.map(slugifyStr).filter(tag => tag !== DEFAULT_TAG);
+
+/**
  * Up to three posts sharing the most tags with `post`, newer first on a tie;
  * none when nothing overlaps (the list then isn't rendered at all).
  *
@@ -28,16 +39,15 @@ export function getRelatedPosts(
 ): RelatedPost[] {
   if (!config.features.relatedPosts) return [];
 
-  const tags = new Set(post.data.tags.map(slugifyStr));
+  const tags = new Set(topicTags(post));
+  if (tags.size === 0) return [];
 
   return candidates
     .filter(candidate => candidate.id !== post.id)
     .map(candidate => ({
       candidate,
       // A post listing one tag twice still shares it once.
-      shared: new Set(
-        candidate.data.tags.map(slugifyStr).filter(tag => tags.has(tag))
-      ).size,
+      shared: new Set(topicTags(candidate).filter(tag => tags.has(tag))).size,
     }))
     .filter(({ shared }) => shared > 0)
     .sort(

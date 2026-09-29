@@ -137,7 +137,7 @@ Post cards and the post header show an estimated reading time after the date ("5
 
 ### Related posts
 
-At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
+At the end of each post, up to three posts in the same language that share the most tags (newer first on a tie) are listed. Tags are compared by their slug, so `Photography` and `photography` match. The `others` tag that untagged posts get by default doesn't count. A post whose tags no other post uses gets no list. Turn it off with `features.relatedPosts: false`.
 
 ### Share links
 

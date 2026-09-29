@@ -141,7 +141,7 @@ features: {
 
 ### 相关文章
 
-每篇文章末尾会列出同一语言中共同标签最多的至多三篇文章（同分时较新的在前）。标签按 slug 比较，`Photography` 与 `photography` 视为同一个。标签与其他文章都不重合时不显示。用 `features.relatedPosts: false` 关闭。
+每篇文章末尾会列出同一语言中共同标签最多的至多三篇文章（同分时较新的在前）。标签按 slug 比较，`Photography` 与 `photography` 视为同一个。未写标签的文章默认得到的 `others` 标签不参与匹配。标签与其他文章都不重合时不显示。用 `features.relatedPosts: false` 关闭。
 
 ### 分享链接
 
