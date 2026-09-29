@@ -16,13 +16,13 @@
   }
   :lang(zh) {
     font-variant-east-asian: normal;
-    /* The CJK font ships upright faces only, so every italic here — h3, the
-       page description, emphasis — was the browser slanting the glyphs, which
-       Chinese typesetting doesn't do. */
+    /* The CJK font ships upright faces only, so any italic here — h3, the
+       page description, emphasis — would be the browser slanting the glyphs,
+       which Chinese typesetting doesn't do. */
     font-synthesis-style: none;
   }
-  /* Emphasis in Chinese: dots under the characters (着重号) rather than an
-     italic that would now render upright and so be lost. */
+  /* Emphasis in Chinese: dots under the characters (着重号); with no italic
+     (above) it would otherwise look like plain text. */
   :lang(zh) em {
     font-style: normal;
     text-emphasis: filled dot;
@@ -51,7 +51,7 @@
     /* Every colour the typography plugin paints with, pointed at the theme
        tokens. The plugin's own palette is a fixed light grey scale (there is
        no prose-invert here), so anything not overridden element by element —
-       h5, h6, dt, dd, kbd, a blockquote without a <p> — used to stay dark grey
+       h5, h6, dt, dd, kbd, a blockquote without a <p> — would stay dark grey
        on the dark background. Declared after `@apply prose` so these win. */
     --tw-prose-body: var(--foreground);
     --tw-prose-headings: var(--foreground);

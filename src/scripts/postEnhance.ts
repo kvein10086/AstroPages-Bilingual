@@ -5,11 +5,10 @@
  * links and code copy buttons.
  *
  * This is a bundled module, run once per page instance through `onPageReady`.
- * It used to be `is:inline data-astro-rerun` scripts, which re-ran on every
- * visit and added `document` listeners that nothing ever removed: two more
- * scroll handlers per post read, still firing on every page after it, and
- * each one keeping its old page's DOM alive. Here every listener hangs off one
- * `AbortController` that `astro:before-swap` aborts.
+ * Every listener it adds hangs off one `AbortController` that
+ * `astro:before-swap` aborts, so none outlives its page: a `document` scroll
+ * handler left behind would keep firing on every later page and keep the old
+ * page's DOM alive.
  */
 
 import { tplStr } from "@/i18n/format";

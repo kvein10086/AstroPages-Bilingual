@@ -80,16 +80,17 @@ const redirectTargets = Object.fromEntries(
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!--
-      Bilingual redirect: honour a manually chosen language (set by the language
-      switcher) first, then fall back to the browser language on first visit.
-      It only ever goes to this page's verified counterpart, keeping the query
-      string and hash; a page that has none in the desired language (a
-      Chinese-only post or tag, the 404 page) stays put instead of redirecting
-      to a 404. The targets come from resolveAlternate() at build time: this
-      script runs before the hreflang links below are parsed, so it cannot
-      read them. Loop-safe: the counterpart's own desired locale is itself.
-    -->
+    {
+      /* Bilingual redirect: honour a manually chosen language (set by the
+      language switcher) first, then fall back to the browser language on
+      first visit. It only ever goes to this page's verified counterpart,
+      keeping the query string and hash; a page that has none in the desired
+      language (a Chinese-only post or tag, the 404 page) stays put instead of
+      redirecting to a 404. The targets come from resolveAlternate() at build
+      time: this script runs before the hreflang links below are parsed, so it
+      cannot read them. Loop-safe: the counterpart's own desired locale is
+      itself. */
+    }
     <script
       is:inline
       define:vars={{ currentLocale: locale, targets: redirectTargets }}
@@ -97,7 +98,8 @@ const redirectTargets = Object.fromEntries(
       (function () {
         // define:vars gives every page a different script text, and the
         // ClientRouter re-runs head scripts whose text it has not seen.
-        // Only act on the first, full page load — as before.
+        // Only the first, full page load redirects; client-side navigation
+        // never does.
         if (window.__langRedirectChecked) return;
         window.__langRedirectChecked = true;
         try {

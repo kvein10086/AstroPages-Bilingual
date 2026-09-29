@@ -11,12 +11,12 @@
  * otherwise pin the page to dark for good.
  */
 
-// Not the old `theme` key: until this change an OS appearance switch (and
-// Chrome's print preview) wrote into it too, so a stored `theme` cannot be
-// told apart from a real click. Reading a fresh key drops those values for
-// good — every reader starts from "follow the system" once, and a genuine
-// choice costs one click to restore. The inline script in Layout.astro reads
-// the same key, so the first paint never flashes the legacy value.
+// Named apart from the legacy `theme` key, which earlier versions also wrote
+// on OS appearance switches (and on Chrome's print preview), so a stored
+// `theme` can't be told apart from a real click. That key is ignored and
+// removed: a reader who had picked a theme under it follows the system once
+// and picks again. The inline script in Layout.astro reads the same key, so
+// the first paint never flashes the legacy value.
 const THEME_KEY = "theme-choice";
 const LEGACY_THEME_KEY = "theme";
 const LIGHT = "light";
