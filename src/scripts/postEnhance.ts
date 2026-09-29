@@ -12,26 +12,94 @@
  * `AbortController` that `astro:before-swap` aborts.
  */
 
+import { tplStr } from "@/i18n/format";
+
 /** Share of the page scrolled past before the back-to-top button shows. */
 const BACK_TO_TOP_THRESHOLD = 0.3;
 
-/** How long "Copied" stays on a copy button. */
-const COPY_FEEDBACK_MS = 700;
+/** How long "Copied" / "Copy failed" stays on a copy button. */
+const COPY_FEEDBACK_MS = 1500;
+
+/**
+ * UI strings, rendered by BackToTopButton.astro as JSON in
+ * `#post-enhance-config[data-strings]` for the page's locale. The English
+ * fallbacks only matter if that element is missing.
+ */
+interface PostStrings {
+  copyCode: string;
+  codeCopied: string;
+  copyFailed: string;
+  /** Placeholder: {{heading}} */
+  headingAnchor: string;
+}
+
+const FALLBACK_STRINGS: PostStrings = {
+  copyCode: "Copy",
+  codeCopied: "Copied",
+  copyFailed: "Copy failed",
+  headingAnchor: "Link to section: {{heading}}",
+};
 
 /** Cleanup for the page instance currently wired up. */
 let teardown: (() => void) | null = null;
 
-/** Link icon after each heading of the article, pointing at its `id`. */
-function addHeadingLinks(article: HTMLElement) {
+function readStrings(): PostStrings {
+  const config = document.getElementById("post-enhance-config");
+  try {
+    return {
+      ...FALLBACK_STRINGS,
+      ...JSON.parse(config?.dataset.strings ?? "{}"),
+    };
+  } catch {
+    return FALLBACK_STRINGS;
+  }
+}
+
+/**
+ * A heading's text as a reader reads it, for the anchor's accessible name.
+ * `textContent` is wrong wherever the heading holds rendered markup: KaTeX
+ * emits each formula twice (MathML plus an `aria-hidden` HTML copy) and a
+ * footnote reference glues its number onto the last word. Same rules as
+ * src/utils/rehype/rehypeTocLabels.ts, which does this at build time for the
+ * TOC — but only for the headings the TOC lists.
+ */
+function readableText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? "";
+  if (!(node instanceof Element)) return "";
+  if (
+    node.getAttribute("aria-hidden") === "true" ||
+    node.hasAttribute("data-footnote-ref")
+  ) {
+    return "";
+  }
+  if (node.classList.contains("katex")) {
+    const tex = node.querySelector('annotation[encoding="application/x-tex"]');
+    if (tex) return tex.textContent ?? "";
+  }
+  return Array.from(node.childNodes, readableText).join("");
+}
+
+/**
+ * A "#" link after each heading of the article, pointing at its `id`. The "#"
+ * itself is decoration, so the link is named after the section it links to —
+ * without a name, screen readers announced 28 bare "link"s on a long post.
+ */
+function addHeadingLinks(article: HTMLElement, strings: PostStrings) {
   const headings = article.querySelectorAll<HTMLElement>(
     ":is(h2, h3, h4, h5, h6)[id]"
   );
   for (const heading of headings) {
+    const text = readableText(heading).replace(/\s+/g, " ").trim();
+
     heading.classList.add("group");
     const link = document.createElement("a");
     link.className =
       "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
     link.href = `#${heading.id}`;
+    link.setAttribute(
+      "aria-label",
+      tplStr(strings.headingAnchor, { heading: text })
+    );
 
     const span = document.createElement("span");
     span.ariaHidden = "true";
@@ -41,17 +109,32 @@ function addHeadingLinks(article: HTMLElement) {
   }
 }
 
-/** A copy button on every code block; returns a canceller for its timers. */
-function attachCopyButtons(article: HTMLElement, signal: AbortSignal) {
-  const label = "Copy";
-  const timers = new Set<number>();
+/**
+ * A copy button on every code block of the article. The outcome shows on the
+ * button and is announced through a visually hidden live region: the button's
+ * own label changing is not reliably read out. Returns a canceller for the
+ * pending feedback timers.
+ */
+function attachCopyButtons(
+  article: HTMLElement,
+  strings: PostStrings,
+  signal: AbortSignal
+) {
+  const codeBlocks = article.querySelectorAll("pre");
+  const timers = new Map<HTMLButtonElement, number>();
+  if (codeBlocks.length === 0) return () => {};
 
-  for (const codeBlock of article.querySelectorAll("pre")) {
+  const status = document.createElement("span");
+  status.className = "sr-only";
+  status.setAttribute("role", "status");
+  document.body.appendChild(status);
+
+  for (const codeBlock of codeBlocks) {
     const wrapper = document.createElement("div");
     wrapper.style.position = "relative";
 
-    // The file-name transformer shifts the block down to make room for its
-    // tab; the button follows it instead of overlapping the tab.
+    // Shiki's file-name transformer (src/utils/transformers/fileName.js)
+    // records where its label sits; line the button up with it.
     const hasFileNameOffset =
       getComputedStyle(codeBlock)
         .getPropertyValue("--file-name-offset")
@@ -59,8 +142,9 @@ function attachCopyButtons(article: HTMLElement, signal: AbortSignal) {
     const topClass = hasFileNameOffset ? "top-(--file-name-offset)" : "-top-3";
 
     const button = document.createElement("button");
+    button.type = "button";
     button.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
-    button.textContent = label;
+    button.textContent = strings.copyCode;
     codeBlock.setAttribute("tabindex", "0");
     codeBlock.appendChild(button);
 
@@ -71,20 +155,38 @@ function attachCopyButtons(article: HTMLElement, signal: AbortSignal) {
       "click",
       async () => {
         const text = codeBlock.querySelector("code")?.innerText ?? "";
-        await navigator.clipboard.writeText(text);
-        button.textContent = "Copied";
-        const timer = window.setTimeout(() => {
-          timers.delete(timer);
-          button.textContent = label;
-        }, COPY_FEEDBACK_MS);
-        timers.add(timer);
+        let copied = true;
+        try {
+          // Rejects when permission is denied; `navigator.clipboard` is
+          // missing altogether outside a secure context (plain-http preview).
+          await navigator.clipboard.writeText(text);
+        } catch {
+          copied = false;
+        }
+        if (signal.aborted) return;
+
+        const message = copied ? strings.codeCopied : strings.copyFailed;
+        button.textContent = message;
+        // Empty first, so a second identical message is announced again.
+        status.textContent = "";
+        requestAnimationFrame(() => (status.textContent = message));
+
+        window.clearTimeout(timers.get(button));
+        timers.set(
+          button,
+          window.setTimeout(() => {
+            timers.delete(button);
+            button.textContent = strings.copyCode;
+            status.textContent = "";
+          }, COPY_FEEDBACK_MS)
+        );
       },
       { signal }
     );
   }
 
   return () => {
-    for (const timer of timers) window.clearTimeout(timer);
+    for (const timer of timers.values()) window.clearTimeout(timer);
     timers.clear();
   };
 }
@@ -178,8 +280,9 @@ export function initPostEnhance() {
   const controller = new AbortController();
   const { signal } = controller;
 
-  addHeadingLinks(article);
-  const cancelCopyTimers = attachCopyButtons(article, signal);
+  const strings = readStrings();
+  addHeadingLinks(article, strings);
+  const cancelCopyTimers = attachCopyButtons(article, strings, signal);
   const cancelFrame = initScrollChrome(signal);
 
   const cleanup = () => {

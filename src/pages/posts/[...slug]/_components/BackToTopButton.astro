@@ -11,9 +11,21 @@ import { useTranslations } from "@/i18n";
  * It starts `inert`: while faded out it still sits over the corner of the
  * text, and without `inert` it would catch taps meant for the article, take a
  * Tab stop and be read out as an invisible "back to top" button.
+ *
+ * It also carries the strings for the rest of postEnhance.ts (copy buttons,
+ * heading anchors): this is the only markup that script owns on the page.
  */
 const t = useTranslations(Astro.currentLocale);
+
+const postStrings = JSON.stringify({
+  copyCode: t.post.copyCode,
+  codeCopied: t.post.codeCopied,
+  copyFailed: t.post.copyFailed,
+  headingAnchor: t.a11y.headingAnchor,
+});
 ---
+
+<span id="post-enhance-config" hidden data-strings={postStrings}></span>
 
 <div
   id="btt-btn-container"

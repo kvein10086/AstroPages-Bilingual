@@ -23,6 +23,9 @@ export default {
     previousPost: "Previous Post",
     nextPost: "Next Post",
     toc: "On this page",
+    copyCode: "Copy",
+    codeCopied: "Copied",
+    copyFailed: "Copy failed",
   },
   pagination: {
     prev: "Prev",
@@ -97,6 +100,9 @@ export default {
     playVideo: "Play video",
     openToc: "Open table of contents",
     closeToc: "Close table of contents",
+    headingAnchor: "Link to section: {{heading}}",
+    zoomImage: "Zoom image",
+    zoomImageAlt: "Zoom image: {{alt}}",
   },
   notFound: {
     title: "404 Not Found",
