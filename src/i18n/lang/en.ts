@@ -16,7 +16,6 @@ export default {
     sharePostIntro: "Share this post:",
     sharePostOn: "Share this post on {{platform}}",
     sharePostViaEmail: "Share this post via email",
-    tagLabel: "Tags",
     backToTop: "Back to top",
     goBack: "Go back",
     editPage: "Edit page",
@@ -53,6 +52,7 @@ export default {
   pages: {
     tagTitle: "Tag: {{tag}}",
     tagDesc: "{{count}} posts tagged “{{tag}}”.",
+    tagDescOne: "{{count}} post tagged “{{tag}}”.",
 
     tagsTitle: "Tags",
     tagsDesc: "Posts, threaded by topic.",
@@ -69,7 +69,6 @@ export default {
 
     searchTitle: "Search",
     searchDesc: "A few words to find it again.",
-    tagDescOne: "{{count}} post tagged “{{tag}}”.",
   },
   gallery: {
     albumsNav: "Albums",

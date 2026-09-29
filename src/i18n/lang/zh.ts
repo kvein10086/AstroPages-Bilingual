@@ -16,7 +16,6 @@ export default {
     sharePostIntro: "分享这篇文章：",
     sharePostOn: "分享到 {{platform}}",
     sharePostViaEmail: "通过邮件分享",
-    tagLabel: "标签",
     backToTop: "回到顶部",
     goBack: "返回",
     editPage: "编辑此页",
@@ -53,6 +52,8 @@ export default {
   pages: {
     tagTitle: "标签：{{tag}}",
     tagDesc: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
+    // 中文不分单复数，与 tagDesc 相同。
+    tagDescOne: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
 
     tagsTitle: "标签",
     tagsDesc: "按话题串起的文章。",
@@ -69,7 +70,6 @@ export default {
 
     searchTitle: "搜索",
     searchDesc: "用几个字，找回一篇文章。",
-    tagDescOne: "共 {{count}} 篇带有「{{tag}}」标签的文章。",
   },
   gallery: {
     albumsNav: "相册",

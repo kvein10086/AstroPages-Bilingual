@@ -7,7 +7,7 @@ import config from "@/config";
 const locale = (Astro.currentLocale ?? config.site.lang) as Locale;
 const target: Locale = locale === "zh" ? "en" : "zh";
 const label = target === "zh" ? "切换到中文" : "Switch to English";
-const { shortLabel } = getLocaleInfo(target);
+const { shortLabel, hreflang } = getLocaleInfo(target);
 
 // The same page in the other language when it exists there, otherwise its
 // nearest existing ancestor (e.g. a Chinese-only tag → the English tag
@@ -27,7 +27,7 @@ const { href } = await resolveAlternate(Astro.url.pathname, target);
 <a
   href={href}
   data-lang-switch={target}
-  hreflang={target}
+  hreflang={hreflang}
   lang={target}
   class="focus-outline hover:text-accent flex items-center justify-center sm:h-8"
   title={label}

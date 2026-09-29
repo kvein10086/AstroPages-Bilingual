@@ -14,7 +14,6 @@ export interface UIStrings {
     sharePostIntro: string;
     sharePostOn: string;
     sharePostViaEmail: string;
-    tagLabel: string;
     backToTop: string;
     goBack: string;
     editPage: string;
@@ -57,6 +56,8 @@ export interface UIStrings {
     tagTitle: string;
     /** Placeholders: {{count}}, {{tag}} */
     tagDesc: string;
+    /** `tagDesc` when the tag has exactly one post. Placeholders: {{count}}, {{tag}} */
+    tagDescOne: string;
 
     tagsTitle: string;
     tagsDesc: string;
@@ -73,8 +74,6 @@ export interface UIStrings {
 
     searchTitle: string;
     searchDesc: string;
-    /** `tagDesc` when the tag has exactly one post. Placeholders: {{count}}, {{tag}} */
-    tagDescOne: string;
   };
   gallery: {
     albumsNav: string;

@@ -60,23 +60,24 @@ export function initShareLink() {
   }
   button.hidden = false;
 
-  function feedback(state: "copied" | "failed") {
+  // Arrow functions, not declarations: they keep the null checks above.
+  const feedback = (state: "copied" | "failed") => {
     window.clearTimeout(resetTimer);
-    button!.dataset.state = state;
-    button!.dataset.icon = state === "copied" ? "check" : restingIcon;
+    button.dataset.state = state;
+    button.dataset.icon = state === "copied" ? "check" : restingIcon;
     // Clear first so a second copy in a row is announced again.
-    status!.textContent = "";
+    status.textContent = "";
     requestAnimationFrame(() => {
-      status!.textContent = state === "copied" ? labelCopied : labelFailed;
+      status.textContent = state === "copied" ? labelCopied : labelFailed;
     });
     resetTimer = window.setTimeout(() => {
-      delete button!.dataset.state;
-      button!.dataset.icon = restingIcon;
-      status!.textContent = "";
+      delete button.dataset.state;
+      button.dataset.icon = restingIcon;
+      status.textContent = "";
     }, FEEDBACK_MS);
-  }
+  };
 
-  async function copy() {
+  const copy = async () => {
     try {
       // Throws where the Clipboard API is missing (an insecure origin) or
       // denied; either way the reader is told to copy it themselves.
@@ -85,7 +86,7 @@ export function initShareLink() {
     } catch {
       feedback("failed");
     }
-  }
+  };
 
   button.addEventListener(
     "click",
