@@ -55,6 +55,12 @@ const t = useTranslations(locale);
     const bundlePath = pageFindSearch?.dataset?.bundlePath;
     if (!bundlePath) return;
 
+    // Both this page's top-level call and a previous page's after-swap
+    // listener can reach here for the same container (zh <-> en switch);
+    // claim it synchronously so only one Pagefind UI is created.
+    if (pageFindSearch.dataset.pfInit) return;
+    pageFindSearch.dataset.pfInit = "1";
+
     const params = new URLSearchParams(window.location.search);
 
     const onIdle = window.requestIdleCallback || (cb => setTimeout(cb, 1));
