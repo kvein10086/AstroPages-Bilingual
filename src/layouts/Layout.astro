@@ -1,9 +1,9 @@
 ---
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
-import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
+import { getFeedPath, getFeedTitle } from "@/utils/feed";
 import config from "@/config";
 import "@/styles/global.css";
 import "@chinese-fonts/sypxzs/dist/思源屏显臻宋/result.css";
@@ -25,16 +25,13 @@ const {
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
-const rssHref = getRelativeLocaleUrl(
-  Astro.currentLocale ?? config.site.lang,
-  "rss.xml"
-);
+const locale = Astro.currentLocale ?? site.lang;
 ---
 
 <!doctype html>
 <html
   dir={site.dir ?? "ltr"}
-  lang={Astro.currentLocale ?? site.lang}
+  lang={locale}
   class="overflow-y-scroll scroll-smooth motion-reduce:scroll-auto"
 >
   <head>
@@ -108,8 +105,8 @@ const rssHref = getRelativeLocaleUrl(
     <link
       rel="alternate"
       type="application/rss+xml"
-      title={site.title}
-      href={new URL(rssHref, Astro.site)}
+      title={getFeedTitle(locale)}
+      href={new URL(getFeedPath(locale), Astro.site)}
     />
 
     <!-- Filled at runtime by theme.ts to match the current background colour -->

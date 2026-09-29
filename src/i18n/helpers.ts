@@ -10,12 +10,23 @@
 
 export const DEFAULT_LOCALE = "zh";
 
+/**
+ * `hreflang` is the BCP 47 tag used for `<link rel="alternate" hreflang>` and
+ * the RSS `<language>` element; `label` is the language's own name.
+ */
 export const LOCALES = [
-  { code: "zh", label: "中文" },
-  { code: "en", label: "English" },
+  { code: "zh", label: "中文", hreflang: "zh-CN" },
+  { code: "en", label: "English", hreflang: "en" },
 ] as const;
 
 export type Locale = (typeof LOCALES)[number]["code"];
+
+export type LocaleInfo = (typeof LOCALES)[number];
+
+/** The `LOCALES` entry for `locale`; unknown codes get the default (first). */
+export function getLocaleInfo(locale: string): LocaleInfo {
+  return LOCALES.find(({ code }) => code === locale) ?? LOCALES[0];
+}
 
 /** Detect the locale from a URL pathname (en under `/en/`, otherwise zh). */
 export function getLocaleFromPath(pathname: string): Locale {
