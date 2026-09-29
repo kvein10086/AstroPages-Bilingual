@@ -41,6 +41,8 @@ export default defineAstroPaperConfig({
     // headings: a side rail on wide screens, a floating button + sheet below.
     // Per post, `toc: false` hides it and `toc: true` forces it.
     toc: { enabled: true, minHeadings: 3, maxDepth: 3 },
+    // "约 5 分钟" / "5 min read" after the date on cards and post headers.
+    readingTime: true,
   },
   socials: [
     { name: "github", url: "https://github.com/t0saki/AstroPages-Bilingual" },

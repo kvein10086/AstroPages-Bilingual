@@ -23,6 +23,7 @@ export default {
     previousPost: "上一篇",
     nextPost: "下一篇",
     toc: "目录",
+    readingTime: "约 {{n}} 分钟",
   },
   pagination: {
     prev: "上一页",

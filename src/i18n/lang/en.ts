@@ -23,6 +23,7 @@ export default {
     previousPost: "Previous Post",
     nextPost: "Next Post",
     toc: "On this page",
+    readingTime: "{{n}} min read",
   },
   pagination: {
     prev: "Prev",

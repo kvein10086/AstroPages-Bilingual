@@ -50,6 +50,7 @@ const config: ResolvedAstroPaperConfig = {
     search: userConfig.features?.search ?? "pagefind",
     gallery: userConfig.features?.gallery ?? { enabled: false },
     toc: resolveToc(userConfig.features?.toc),
+    readingTime: userConfig.features?.readingTime ?? true,
   },
   socials: userConfig.socials ?? [],
   shareLinks: userConfig.shareLinks ?? [],

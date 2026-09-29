@@ -131,6 +131,10 @@ features: {
 
 Per post, frontmatter overrides it: `toc: false` hides it, `toc: true` shows it even below the threshold. A remark-toc "Table of contents" / "目录" heading in the body is never listed.
 
+### Reading time
+
+Post cards and the post header show an estimated reading time after the date ("5 min read"). CJK characters (~400/min) and Latin words (~230/min) are counted separately and added up, so a Chinese post full of English terms is estimated as fairly as an English one; code blocks, math, URLs and markup don't count. `gallery: true` posts show none. Turn it off with `features.readingTime: false`.
+
 ## 📸 Photo Gallery
 
 The `/gallery` page collects image-host photos straight from your posts' bodies. There's **no separate image list to maintain** — the photos come from the `![alt](url)` links already in your travelogues.

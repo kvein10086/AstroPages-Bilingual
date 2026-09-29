@@ -96,6 +96,12 @@ interface FeaturesConfig {
         maxDepth?: 2 | 3 | 4;
       }
     | { enabled: false };
+  /**
+   * Estimated reading time after the date, on post cards and the post header.
+   * CJK characters and Latin words are counted separately and added up; hidden
+   * on `gallery: true` posts. Defaults to true.
+   */
+  readingTime?: boolean;
 }
 
 /** `features.toc` with its defaults applied. */

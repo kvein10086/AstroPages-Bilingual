@@ -21,6 +21,8 @@ export interface UIStrings {
     previousPost: string;
     nextPost: string;
     toc: string;
+    /** Placeholder: {{n}} (minutes) */
+    readingTime: string;
   };
   pagination: {
     prev: string;
