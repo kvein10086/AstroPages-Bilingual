@@ -13,6 +13,17 @@
   }
   :lang(zh) {
     font-variant-east-asian: normal;
+    /* The CJK font ships upright faces only, so every italic here — h3, the
+       page description, emphasis — was the browser slanting the glyphs, which
+       Chinese typesetting doesn't do. */
+    font-synthesis-style: none;
+  }
+  /* Emphasis in Chinese: dots under the characters (着重号) rather than an
+     italic that would now render upright and so be lost. */
+  :lang(zh) em {
+    font-style: normal;
+    text-emphasis: filled dot;
+    text-emphasis-position: under right;
   }
 
   /* ===== Override default Tailwind Typography styles ===== */
@@ -121,8 +132,17 @@
       @apply flex-[1_0_100%] bg-inherit p-0;
     }
 
+    /* The plugin sets quotations in italic and wraps them in curly quotes the
+       author never typed — wrong for asides and disclaimers, and synthesised
+       italic besides. Keep them upright and unquoted; the rule and the
+       dimming set them apart. */
     blockquote {
-      @apply wrap-break-word opacity-80;
+      @apply wrap-break-word not-italic opacity-80;
+
+      p:first-of-type::before,
+      p:last-of-type::after {
+        content: none;
+      }
     }
 
     details:not(.callout) {
