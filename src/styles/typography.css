@@ -8,46 +8,69 @@
        column — over the TOC rail on wide screens. Only kicks in on overflow. */
     @apply wrap-break-word;
 
+    /* Every colour the typography plugin paints with, pointed at the theme
+       tokens. The plugin's own palette is a fixed light grey scale (there is
+       no prose-invert here), so anything not overridden element by element —
+       h5, h6, dt, dd, kbd, a blockquote without a <p> — used to stay dark grey
+       on the dark background. Declared after `@apply prose` so these win. */
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-lead: var(--muted-foreground);
+    --tw-prose-links: var(--foreground);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--accent);
+    --tw-prose-bullets: var(--accent);
+    --tw-prose-hr: var(--border);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: color-mix(
+      in oklab,
+      var(--accent) 80%,
+      transparent
+    );
+    --tw-prose-captions: var(--muted-foreground);
+    --tw-prose-kbd: var(--foreground);
+    --tw-prose-kbd-shadows: color-mix(
+      in oklab,
+      var(--foreground) 10%,
+      transparent
+    );
+    --tw-prose-code: var(--foreground);
+    --tw-prose-pre-code: var(--foreground);
+    --tw-prose-pre-bg: var(--muted);
+    --tw-prose-th-borders: var(--border);
+    --tw-prose-td-borders: var(--border);
+
     h1,
     h2,
     h3,
-    h4,
-    th {
-      @apply text-foreground mb-3;
+    h4 {
+      @apply mb-3;
     }
 
     h3 {
       @apply italic;
     }
 
-    p,
-    strong,
-    ol,
-    ul,
-    figcaption,
-    table,
-    code {
-      @apply text-foreground;
-    }
-
     a {
-      @apply text-foreground hover:text-accent wrap-break-word decoration-dashed underline-offset-4 focus-visible:no-underline;
+      @apply hover:text-accent wrap-break-word decoration-dashed underline-offset-4 focus-visible:no-underline;
     }
 
     ul {
       @apply overflow-x-clip;
     }
 
-    li {
-      @apply marker:text-accent;
-    }
-
-    hr {
-      @apply border-border;
-    }
-
     img {
       @apply border-border mx-auto border;
+    }
+
+    /* Dark theme: diagrams with a transparent background are drawn for a
+       white page, and their black strokes and labels vanish into the dark
+       one. Sit them on the theme's light ink colour instead; opaque photos
+       cover it completely. JPEG and AVIF — photo formats — are skipped: an
+       image whose size is known before it loads would otherwise show as a
+       light box until it arrives. Not <video>: its black letterbox is meant. */
+    img:not([src*=".jpg" i], [src*=".jpeg" i], [src*=".avif" i]) {
+      @apply dark:bg-foreground;
     }
 
     /* Inline players from `![caption](…/clip.mp4)` lines — see
@@ -65,10 +88,6 @@
       }
     }
 
-    figcaption {
-      @apply opacity-75;
-    }
-
     table {
       th,
       td {
@@ -81,7 +100,7 @@
     }
 
     code {
-      @apply bg-muted/75 text-foreground rounded p-1 wrap-break-word before:content-none after:content-none;
+      @apply bg-muted/75 rounded p-1 wrap-break-word before:content-none after:content-none;
     }
 
     .astro-code code {
@@ -89,11 +108,11 @@
     }
 
     blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
+      @apply wrap-break-word opacity-80;
     }
 
     details:not(.callout) {
-      @apply text-foreground inline-block cursor-pointer select-none [&_p]:hidden [&_ul]:my-0!;
+      @apply inline-block cursor-pointer select-none [&_p]:hidden [&_ul]:my-0!;
     }
 
     summary {
@@ -102,13 +121,6 @@
 
     pre {
       @apply focus-visible:outline-accent focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed;
-    }
-
-    /* KaTeX math inherits the prose base color by default, which doesn't track
-       the dark theme (no prose-invert here). Force the theme foreground so
-       display math stays legible in dark mode. */
-    .katex {
-      @apply text-foreground;
     }
 
     /* Allow wide KaTeX display equations to scroll horizontally on narrow screens */
