@@ -99,6 +99,7 @@ export interface UIStrings {
     playVideo: string;
     openToc: string;
     closeToc: string;
+    pagination: string;
   };
   notFound: {
     title: string;

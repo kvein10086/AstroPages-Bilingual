@@ -97,6 +97,7 @@ export default {
     playVideo: "播放视频",
     openToc: "打开目录",
     closeToc: "关闭目录",
+    pagination: "分页",
   },
   notFound: {
     title: "404 未找到",
