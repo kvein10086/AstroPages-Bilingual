@@ -233,8 +233,9 @@ function initScrollChrome(signal: AbortSignal) {
   let lastVisible: boolean | null = null;
   function update() {
     const scrollTotal = root.scrollHeight - root.clientHeight;
-    // A page that doesn't scroll has nothing left to read.
-    const progress = scrollTotal > 0 ? root.scrollTop / scrollTotal : 1;
+    // A page that doesn't scroll has no progress to show: a full bar would
+    // just be a stray accent line across the top of the viewport.
+    const progress = scrollTotal > 0 ? root.scrollTop / scrollTotal : 0;
     const percent = Math.floor(progress * 100);
 
     progressBar.style.width = `${percent}%`;
