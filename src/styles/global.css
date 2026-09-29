@@ -274,13 +274,6 @@
   transition: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .post-toc-sheet,
-  .post-toc-sheet::backdrop {
-    transition: none;
-  }
-}
-
 /* Printing with the sheet open: `.post-toc-sheet[open]` (un-layered) would
    beat the layered `print:hidden` utility and print the panel over page 1.
    No transition either, or the discrete `display` one keeps it for 0.2s. */
@@ -294,8 +287,8 @@
 
 /* ===== Reduced motion =====
    One switch for every transition and animation on the site (the back-to-top
-   slide, the theme icon spin, fades) instead of a motion-reduce variant on
-   each. Durations are cut to a hair rather than removed so transitionend /
+   slide, the TOC panel, the theme icon spin, fades), so components need no
+   motion-reduce variants of their own. Durations are cut to a hair rather than removed so transitionend /
    animationend still fire for any script waiting on them. In the base layer
    with !important, which beats even !important utilities in later layers.
    `*` doesn't reach ::view-transition-* pseudo-elements: page transitions

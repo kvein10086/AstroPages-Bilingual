@@ -60,7 +60,7 @@ const t = useTranslations(Astro.currentLocale);
           class:list={[
             "bg-accent absolute inset-s-0 top-0 w-0.5 rounded-full",
             "h-(--toc-indicator-h) translate-y-(--toc-indicator-y) opacity-0 data-active:opacity-100",
-            "transition-[translate,height,opacity] duration-200 ease-out data-jump:transition-opacity motion-reduce:duration-0",
+            "transition-[translate,height,opacity] duration-200 ease-out data-jump:transition-opacity",
           ]}></span>
         <PostTocList items={items} variant="rail" />
       </div>
@@ -84,7 +84,7 @@ const t = useTranslations(Astro.currentLocale);
     // On the dark page a shadow doesn't lift it; a lighter surface does.
     "dark:ring-foreground/20 dark:bg-[color-mix(in_srgb,var(--foreground)_10%,var(--background))] dark:shadow-black/40",
     "hover:text-accent focus-visible:text-accent",
-    "pointer-events-none translate-y-4 opacity-0 transition duration-300 ease-out motion-reduce:transition-none",
+    "pointer-events-none translate-y-4 opacity-0 transition duration-300 ease-out",
     "data-visible:pointer-events-auto data-visible:translate-y-0 data-visible:opacity-100",
   ]}
   data-pagefind-ignore="all"
