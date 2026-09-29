@@ -1,12 +1,11 @@
 ---
 import { getRelativeLocaleUrl } from "astro:i18n";
-import "@pagefind/default-ui/css/ui.css";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Breadcrumb from "@/components/Breadcrumb.astro";
 import Main from "@/components/Main.astro";
 import Footer from "@/components/Footer.astro";
-import { getAssetPath } from "@/utils/withBase";
+import PagefindSearch from "@/components/PagefindSearch.astro";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
@@ -18,20 +17,7 @@ if (config.features.search !== "pagefind" && notFoundUrl) {
   return Astro.rewrite(notFoundUrl);
 }
 
-const backUrl = config.features.showBackButton
-  ? `${Astro.url.pathname}`
-  : getRelativeLocaleUrl(locale, "");
-
-const pagefindBundlePath = getAssetPath("pagefind/");
-
 const t = useTranslations(locale);
-
-// Pagefind UI's `translations` option; `language` picks the number format
-// for its result counts.
-const pagefindTranslations = JSON.stringify({
-  language: locale,
-  ...t.search.pagefind,
-});
 ---
 
 <Layout title={`${t.pages.searchTitle} | ${config.site.title}`}>
@@ -50,73 +36,8 @@ const pagefindTranslations = JSON.stringify({
         </div>
       )
     }
-    <div
-      id="pagefind-search"
-      transition:persist
-      data-backurl={backUrl}
-      data-bundle-path={pagefindBundlePath}
-      data-translations={pagefindTranslations}
-    >
-    </div>
+    <PagefindSearch />
   </Main>
 
   <Footer />
 </Layout>
-
-<script>
-  import { onPageReady } from "@/scripts/onPageReady";
-  import { initSearch } from "@/scripts/search";
-
-  onPageReady(initSearch);
-</script>
-
-<style is:global>
-  #pagefind-search {
-    --pagefind-ui-font: var(--font-app);
-    --pagefind-ui-text: var(--foreground);
-    --pagefind-ui-background: var(--background);
-    --pagefind-ui-border: var(--border);
-    --pagefind-ui-primary: var(--accent);
-    --pagefind-ui-tag: var(--background);
-    --pagefind-ui-border-radius: 0.375rem;
-    --pagefind-ui-border-width: 1px;
-    --pagefind-ui-image-border-radius: 8px;
-    --pagefind-ui-image-box-ratio: 3 / 2;
-
-    form::before {
-      background-color: var(--foreground);
-    }
-
-    input {
-      font-weight: 400;
-      border: 1px solid var(--border);
-    }
-
-    input:focus-visible {
-      outline: 1px solid var(--accent);
-    }
-
-    .pagefind-ui__result-title a {
-      color: var(--accent);
-      outline-offset: 1px;
-      outline-color: var(--accent);
-      text-decoration-style: dashed;
-      text-underline-offset: 4px;
-    }
-
-    .pagefind-ui__result-title a:focus-visible,
-    .pagefind-ui__search-clear:focus-visible {
-      text-decoration-line: none;
-      outline-width: 2px;
-      outline-style: dashed;
-    }
-
-    .pagefind-ui__result:last-of-type {
-      border-bottom: 0;
-    }
-
-    .pagefind-ui__result-nested .pagefind-ui__result-link:before {
-      font-family: system-ui;
-    }
-  }
-</style>

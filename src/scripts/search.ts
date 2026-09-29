@@ -1,8 +1,9 @@
 /**
  * The /search page (zh and /en/): mounts Pagefind UI into `#pagefind-search`
- * and keeps the query in `?q=` so a search can be shared, reloaded and
- * returned to from a result. Call `initSearch` once per page (from
- * `onPageReady`); it does nothing on pages without the element.
+ * (src/components/PagefindSearch.astro) and keeps the query in `?q=` so a
+ * search can be shared, reloaded and returned to from a result. Call
+ * `initSearch` once per page (from `onPageReady`); it does nothing on pages
+ * without the element.
  *
  * Pagefind UI is told its strings explicitly: the npm build of
  * `@pagefind/default-ui` ships an empty `onMount`, so its own `<html lang>`
@@ -22,6 +23,33 @@ interface PagefindUIInstance {
   triggerSearch(term: string): void;
 }
 
+/** The page language Pagefind's search instance was set up for, once mounted. */
+let indexLang: string | null = null;
+
+/**
+ * Pagefind (`pagefind.js`, a module the browser keeps for the whole visit)
+ * holds one search instance, which picks its language index from
+ * `<html lang>` when it is first used. After a client-side switch to the
+ * other language's search page it would keep searching the first language's
+ * posts; disposing of it makes the next search set up a new one that reads
+ * the current `<html lang>`. Pagefind UI imports the module from the same
+ * URL, so both share that instance.
+ */
+async function matchIndexLanguage(bundlePath: string) {
+  const lang = document.documentElement.lang;
+  if (indexLang !== null && indexLang !== lang) {
+    try {
+      const pagefind = await import(
+        /* @vite-ignore */ `${bundlePath}pagefind.js`
+      );
+      await pagefind.destroy?.();
+    } catch {
+      // No index (e.g. the dev server): Pagefind UI reports that itself.
+    }
+  }
+  indexLang = lang;
+}
+
 function readTranslations(json: string | undefined): Record<string, string> {
   try {
     return json ? JSON.parse(json) : {};
@@ -36,10 +64,8 @@ export function initSearch() {
 
   // The container is `transition:persist`ed, so navigating from /search to
   // /search (the header's search link) carries over the live UI, query and
-  // listeners included. Mounting again would add a second search box — as
-  // would a second caller while the first mount is still waiting: each
-  // search page's own script registers with `onPageReady` once it has run,
-  // so after visiting both /search and /en/search two callers arrive here.
+  // listeners included; mounting again would add a second search box. The
+  // `mounting` flag covers a second call while a mount is still pending.
   if (container.querySelector("form") || container.dataset.mounting) return;
 
   const { bundlePath, backurl, translations } =
@@ -66,6 +92,7 @@ export function initSearch() {
   const mount = async () => {
     // @ts-expect-error — Missing types for @pagefind/default-ui package.
     const { PagefindUI } = await import("@pagefind/default-ui");
+    await matchIndexLanguage(bundlePath);
     if (signal.aborted) return;
     delete container.dataset.mounting;
 
