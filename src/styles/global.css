@@ -291,3 +291,24 @@
     transition: none !important;
   }
 }
+
+/* ===== Reduced motion =====
+   One switch for every transition and animation on the site (the back-to-top
+   slide, the theme icon spin, fades) instead of a motion-reduce variant on
+   each. Durations are cut to a hair rather than removed so transitionend /
+   animationend still fire for any script waiting on them. In the base layer
+   with !important, which beats even !important utilities in later layers.
+   `*` doesn't reach ::view-transition-* pseudo-elements: page transitions
+   are left to Astro's ClientRouter, which handles reduced motion itself. */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
